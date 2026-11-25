@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sintonia · Central de Jogos</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f0e6;color:#273a40;font:1rem/1.5 system-ui,sans-serif}button,input,select{font:inherit}button,select{cursor:pointer}button,a,select,input{accent-color:#ad4039}button{border:1px solid #9aaba4;border-radius:.8rem;background:#fffdf7;color:inherit;padding:.65rem 1rem;font-weight:700}button:hover{background:#e5eee6}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #215890;outline-offset:3px}[hidden]{display:none!important}header,main{width:min(96%,72rem);margin:auto}header,.bar,.actions,.scores{display:flex;gap:.65rem;align-items:center;flex-wrap:wrap}header{justify-content:space-between;padding:1.1rem 0;border-bottom:1px solid #b3bcb3}header a{color:inherit;font-weight:700}main{padding:1.4rem 0 3rem}h1{font-size:clamp(2.7rem,6vw,5rem);line-height:1;letter-spacing:-.07em;margin:.3rem 0 1.2rem}h2{line-height:1.2}.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(15rem,1fr);gap:1rem}.board,aside{background:#fffcf5;border:1px solid #c4c9be;border-radius:1.6rem;padding:clamp(1rem,3vw,2.3rem)}.board{background:#c4e2d6;align-self:start}.bar{justify-content:space-between}.concepts{display:flex;margin:1rem 0 0;line-height:1.2;font-weight:800;font-size:clamp(1.05rem,2.4vw,1.6rem)}.concepts span{flex:1;min-width:0;padding:1rem;border-radius:.75rem 0 0 .75rem;background:#f6c49f}.concepts span+span{text-align:right;border-radius:0 .75rem .75rem 0;background:#b9cdf0}svg{display:block;width:100%;margin:.5rem auto;touch-action:pan-y}svg.movable{touch-action:none;cursor:grab}input[type=range]{width:100%}.scores{margin:1rem 0;background:#eee9df;border-radius:1rem;padding:.85rem;justify-content:space-around}.scores div{text-align:center;overflow-wrap:anywhere}.scores b{font-size:1.7rem;display:block}.primary{background:#293f46;color:white;border-color:#293f46}.primary:hover{background:#39565d}.actions{margin:1rem 0}.picked{background:#293f46;color:white}.settings{border-top:1px solid #c4c9be;margin-top:1rem;padding-top:1rem}.settings label,dialog label{display:block;margin:.5rem 0}input:not([type=range]),select{width:100%;border:1px solid #a5b1a8;border-radius:.6rem;background:white;padding:.55rem;color:inherit}dialog{width:min(92vw,33rem);max-height:90svh;border:0;border-radius:1.3rem;padding:1.6rem;color:inherit}dialog::backdrop{background:#152727a6}#message{min-height:3em}output{font-weight:bold}button:disabled{opacity:.5;cursor:default}@media(max-width:720px){.layout{grid-template-columns:1fr}main{width:94%}.board,aside{padding:1rem}header{padding:.65rem 0}}
+</style></head><body>
+<header><a id="home" href="/">‹ Central de Jogos</a><div class="actions"><button id="sound" aria-pressed="false">Som desligado</button><button id="help" aria-label="Abrir regras">?</button></div></header>
+<main><h1>Sintonia</h1><div class="layout"><section class="board" aria-label="Sintonizador">
+<div class="bar"><strong id="round"></strong><button id="card">Trocar carta</button></div>
+<div class="concepts"><span id="left"></span><span id="right"></span></div>
+<svg id="dial" viewBox="0 0 400 223" role="img" aria-label="Mostrador semicircular">
+<path d="M10 202a190 190 0 0 1 380 0Z" fill="#fff3d9" stroke="#34464a" stroke-width="4"/>
+<g id="zones"></g><g id="ticks" stroke="#526364"></g>
+<path id="needle" d="M196 203 L20 202 L196 197 Z" fill="#bd3935" stroke="#932721" stroke-width="1.5"/>
+<circle cx="200" cy="202" r="12" fill="#374c4d"/><circle cx="200" cy="202" r="5" fill="#f2caa8"/>
+</svg>
+<label for="angle">Posição do ponteiro · <output id="degrees">90°</output></label><input id="angle" type="range" min="0" max="180" step="1" value="90" disabled>
+</section><aside><div class="bar"><strong>Placar</strong><button id="edit">Editar nomes</button></div><div class="scores" id="scores"></div>
+<div aria-live="polite"><h2 id="phase"></h2><p id="message"></p></div><div class="actions" id="actions"></div>
+<div class="settings"><label for="mode">Modo de jogo</label><select id="mode"><option value="teams">Modo Equipes</option><option value="coop">Modo Cooperativo</option></select><button id="restart" style="margin-top:.8rem">Reiniciar partida</button></div></aside></div></main>
+<dialog id="rules"><h2>Como jogar</h2><p>Os dois conceitos são os extremos do mostrador. O Psíquico espia o alvo em segredo, fecha a tampa e dá uma pista em voz alta. Para “Frio / Quente”, por exemplo, a pista pode ser “café recém-passado”.</p><p>Evite números, ângulos, porcentagens, gestos que indiquem posições e palavras da própria carta. Depois da pista, o Psíquico fica em silêncio.</p><p>A equipe ajusta o ponteiro. A adversária aposta de que lado está o centro. Revelem o alvo: as cinco zonas valem 2, 3, 4, 3 e 2 pontos. Fora delas, zero. Acertar o lado rende 1 ponto. Se o ponteiro estiver exatamente no centro, nenhum lado pontua.</p><p>Alternem o Psíquico a cada rodada. A Equipe 2 começa com 1 ponto. Ao alcançar 10, vence quem estiver à frente após a revelação. Se empatarem, continuem até uma equipe abrir vantagem.</p><p>No cooperativo, somem os pontos de sete rodadas e tentem superar o recorde deste navegador.</p><form method="dialog"><button>Entendi</button></form></dialog>
+<dialog id="names"><form id="nameForm"><h2>Nomes das equipes</h2><label>Equipe 1<input id="name0" maxlength="36" required></label><label>Equipe 2<input id="name1" maxlength="36" required></label><button class="primary">Salvar</button></form></dialog>
+<dialog id="confirm"><h2>Começar outra partida?</h2><p>O placar atual será zerado e o baralho será embaralhado novamente.</p><div class="actions"><button id="cancel">Continuar jogando</button><button id="yes" class="primary">Começar outra partida</button></div></dialog>
+<script>
+'use strict';
+// Cada linha é uma carta. O baralho embaralhado é consumido inclusive nas trocas manuais.
+const cards = `Frio|Quente
+Inútil|Essencial
+Vilão|Herói
+Filme ruim|Obra-prima
+Cheiro agradável|Cheiro desagradável
+Silencioso|Barulhento
+Frágil|Resistente
+Óbvio|Misterioso
+Caótico|Organizado
+Previsível|Surpreendente
+Comum|Raríssimo
+Leve|Pesado
+Temporal|Garoa
+Tradicional|Futurista
+Improviso|Planejamento
+Salgado|Doce
+Coisa de criança|Coisa de adulto
+Devagar|Depressa
+Relaxante|Estressante
+Fácil de esconder|Difícil de esconder
+Barato|Caro
+Subestimado|Superestimado
+Esquecível|Inesquecível
+Sem graça|Hilário
+Rústico|Sofisticado
+Pouco confiável|Muito confiável
+Tímido|Ousado
+Natural|Artificial
+Bom de ouvir|Ruim de ouvir
+Sorte|Habilidade
+Seguro|Arriscado
+Bom presente|Péssimo presente
+Passatempo|Profissão
+Realidade|Fantasia
+Liso|Áspero
+Solitário|Coletivo
+Discreto|Chamativo
+Muito cedo|Muito tarde
+Maciez|Dureza
+Local|Global
+Vida urbana|Vida no campo
+Talento nato|Prática constante
+Festa tranquila|Festa agitada
+Fácil de imitar|Difícil de imitar
+Curta duração|Longa duração
+Sem tempero|Muito picante`.split('\n').map(line=>line.split('|'));
+const el=id=>document.getElementById(id);
+const ns='http://www.w3.org/2000/svg';
+let deck=[], currentCard, mode='teams', phase, round, active, scores, target, pointer, bet, result, end, sudden;
+let names=['Equipe 1','Equipe 2'], best=0, sound=false, audio, pendingMode;
+try {best=Number(localStorage.getItem('sintonia.recorde'))||0;} catch {}
+function deal(){
+  if(!deck.length){
+    deck=cards.slice();
+    for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
+    if(deck.at(-1)===currentCard) [deck[0],deck[deck.length-1]]=[deck.at(-1),deck[0]];
+  }
+  currentCard=deck.pop();
+}
+function newRound(){
+  round++;deal();target=15+Math.floor(Math.random()*151);pointer=90;bet=null;phase='prep';render();
+}
+function start(nextMode){
+  mode=nextMode;deck=[];round=0;active=0;scores=[0,mode==='teams'?1:0];end='';sudden=false;newRound();
+}
+// O ângulo zero fica à esquerda. Cada zona do alvo ocupa seis graus.
+function point(a,r){const rad=a*Math.PI/180;return [200-r*Math.cos(rad),202-r*Math.sin(rad)];}
+function shape(tag,attrs,parent){const node=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))node.setAttribute(k,v);parent.append(node);return node;}
+for(let a=0;a<=180;a+=5)shape('line',{x1:point(a,181)[0],y1:point(a,181)[1],x2:point(a,a%15?177:172)[0],y2:point(a,a%15?177:172)[1]},el('ticks'));
+function drawDial(){
+  const g=el('zones');g.replaceChildren();
+  // Ausência das zonas no SVG funciona como tampa opaca, inclusive para leitores de tela.
+  if(phase==='peek'||phase==='result'){
+    [2,3,4,3,2].forEach((score,i)=>{
+      const a=target-15+i*6,b=a+6;
+      shape('path',{d:'M200 202 L'+point(a,187)+' A187 187 0 0 1 '+point(b,187)+' Z',fill:['#eeb07c','#75b8ab','#5685cd','#75b8ab','#eeb07c'][i]},g);
+      const [x,y]=point(a+3,157);
+      shape('text',{x,y,'text-anchor':'middle','dominant-baseline':'middle','font-size':13,'font-weight':800,fill:'#162c37'},g).textContent=score;
+    });
+  }
+  el('dial').classList.toggle('movable',phase==='guess');
+  el('angle').disabled=phase!=='guess';setPointer(pointer);
+}
+function setPointer(value){
+  pointer=Math.max(0,Math.min(180,Math.round(value)));el('angle').value=pointer;
+  el('degrees').textContent=pointer+'°';el('needle').setAttribute('transform','rotate('+pointer+' 200 202)');
+}
+function points(distance){return distance<=3?4:distance<=9?3:distance<=15?2:0;}
+function reveal(){
+  if(phase!=='ready')return;
+  const earned=points(Math.abs(target-pointer));
+  const bonus=mode==='teams'&&((bet==='left'&&target<pointer)||(bet==='right'&&target>pointer))?1:0;
+  scores[active]+=earned;scores[1-active]+=bonus;
+  result='Alvo em '+target+'° · Palpite em '+pointer+'°. '+(mode==='teams'?names[active]:'Grupo')+' ganhou '+earned+' ponto(s).';
+  if(mode==='teams'){
+    result+=' '+names[1-active]+' ganhou '+bonus+' ponto(s) na aposta.';
+    if(Math.max(...scores)>=10){
+      if(scores[0]===scores[1]){sudden=true;result+=' Empate! A próxima vantagem decide.';}
+      else end=names[scores[0]>scores[1]?0:1]+' venceu!';
+    }
+  }else if(round===7){
+    end='Sete rodadas concluídas!';
+    if(scores[0]>best){best=scores[0];result+=' Novo recorde!';try{localStorage.setItem('sintonia.recorde',String(best));}catch{}}
+  }
+  phase='result';render();if(earned||bonus){tone(440,.12);tone(660,.2,.12);}
+}
+function tone(freq,duration,delay=0){
+  if(!sound||!audio)return;const t=audio.currentTime+delay,o=audio.createOscillator(),g=audio.createGain();
+  o.frequency.value=freq;g.gain.setValueAtTime(.035,t);g.gain.exponentialRampToValueAtTime(.001,t+duration);o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+duration);
+}
+function action(label,fn,primary=true){const b=document.createElement('button');b.textContent=label;if(primary)b.className='primary';b.onclick=fn;el('actions').append(b);}
+function step(next){phase=next;render();}
+function render(){
+  const coop=mode==='coop',team=coop?'Grupo':names[active];
+  el('mode').value=mode;el('edit').hidden=coop;el('card').hidden=phase!=='prep';
+  el('round').textContent=(sudden?'Morte súbita · ':'')+'Rodada '+round+(coop?' de 7':' · '+team);
+  [el('left').textContent,el('right').textContent]=currentCard;
+  el('scores').replaceChildren();
+  for(const [name,score] of (coop?[['Grupo',scores[0]],['Recorde',best]]:names.map((n,i)=>[n,scores[i]]))){
+    const d=document.createElement('div'),b=document.createElement('b');b.textContent=score;d.append(name,b);el('scores').append(d);
+  }
+  el('actions').replaceChildren();let title,message;
+  switch(phase){
+    case 'prep':title='Preparação do Psíquico';message='Passe a tela ao Psíquico. Os demais devem desviar o olhar antes de abrir a tampa.';action('Espiar alvo',()=>step('peek'));break;
+    case 'peek':title='Só o Psíquico pode olhar';message='Memorize o centro da faixa. Esconda o alvo antes de dar a sua pista em voz alta.';action('Esconder alvo',()=>step('guess'));break;
+    case 'guess':title='Palpite · '+team;message='Depois da pista, arrastem a agulha ou usem o controle para marcar o palpite.';action('Confirmar palpite',()=>step(coop?'ready':'bet'));break;
+    case 'bet':title='Aposta · '+names[1-active];message='De que lado do ponteiro está o centro do alvo?';for(const [side,label] of [['left','Esquerda'],['right','Direita']])action(label,()=>{bet=side;step('ready');},false);break;
+    case 'ready':title='Hora da revelação';message=coop?'O palpite do grupo está confirmado.':'Aposta de '+names[1-active]+': '+(bet==='left'?'esquerda.':'direita.');action('Revelar alvo',reveal);break;
+    case 'result':title=end||'Resultado da rodada';message=result;action(end?'Jogar novamente':'Próxima rodada',()=>{if(end)start(mode);else{if(!coop)active=1-active;newRound();}});break;
+  }
+  el('phase').textContent=title;el('message').textContent=message;drawDial();
+}
+// Converte o toque para o espaço do SVG mesmo quando a tela muda de tamanho.
+function drag(e){
+  if(phase!=='guess')return;
+  const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(el('dial').getScreenCTM().inverse());
+  const angle=Math.atan2(Math.max(0,202-p.y),200-p.x)*180/Math.PI;
+  const old=pointer;setPointer(angle);if(Math.floor(old/5)!==Math.floor(pointer/5))tone(240,.035);
+}
+el('dial').onpointerdown=e=>{if(phase==='guess'){el('dial').setPointerCapture(e.pointerId);drag(e);}};
+el('dial').onpointermove=e=>{if(el('dial').hasPointerCapture(e.pointerId))drag(e);};
+el('angle').oninput=e=>{if(phase==='guess'){setPointer(+e.target.value);tone(240,.035);}};
+el('card').onclick=()=>{if(phase==='prep'){deal();render();}};
+el('help').onclick=()=>el('rules').showModal();
+el('edit').onclick=()=>{names.forEach((n,i)=>el('name'+i).value=n);el('names').showModal();};
+el('nameForm').onsubmit=e=>{e.preventDefault();names=names.map((n,i)=>el('name'+i).value.trim()||n);el('names').close();render();};
+function requestStart(m){
+  if(round===1&&phase==='prep'){start(m);return;}
+  pendingMode=m;el('mode').value=mode;el('confirm').showModal();
+}
+el('mode').onchange=e=>requestStart(e.target.value);el('restart').onclick=()=>requestStart(mode);
+el('cancel').onclick=()=>el('confirm').close();el('yes').onclick=()=>{el('confirm').close();start(pendingMode);};
+el('sound').onclick=async()=>{
+  try {audio??=new (window.AudioContext||window.webkitAudioContext)();await audio.resume();sound=!sound;
+    el('sound').textContent=sound?'Som ligado':'Som desligado';el('sound').setAttribute('aria-pressed',String(sound));tone(400,.07);
+  }catch{el('sound').textContent='Som indisponível';}
+};
+if(location.protocol==='file:')el('home').hidden=true;
+start('teams');
+</script></body></html>

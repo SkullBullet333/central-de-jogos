@@ -1,7 +1,8 @@
-import { Dice5, Ticket, Gamepad2 } from 'lucide-react';
+import { Dice5, Ticket, Radio, Gamepad2 } from 'lucide-react';
 import './central.css';
 
 const jogos = [
+  { nome: 'Sintonia', href: '/sintonia.html', descricao: 'Dê uma pista e ajuste o ponteiro para descobrir onde está o alvo secreto.', icone: Radio, tema: 'sintonia' },
   { nome: 'Bingo 75', href: '/bingo.html', descricao: 'Gire o globo, acompanhe as 75 bolas e marque sua cartela.', icone: Dice5, tema: 'bingo' },
   { nome: 'Sorteador', href: '/sorteador/', descricao: 'Importe os participantes, sorteie os ganhadores e salve o resultado.', icone: Ticket, tema: 'sorteio' },
 ];
