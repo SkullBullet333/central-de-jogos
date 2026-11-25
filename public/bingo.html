@@ -6,12 +6,12 @@
     <title>Bingo 75 Online — Globo &amp; Cartela B-I-N-G-O</title>
     <meta
       name="description"
-      content="Aplicação web autocontida de Bingo Tradicional de 75 bolas (B-I-N-G-O) com Modo Apresentador, Cartela Interativa 5x5 e cache local de 30 minutos."
+      content="Aplicação web autocontida de Bingo Tradicional de 75 bolas (B-I-N-G-O) com Modo Apresentador, Cartela Interativa 5x5 e salvamento local."
     />
     <meta property="og:title" content="Bingo 75 Online — Globo &amp; Cartela B-I-N-G-O" />
     <meta
       property="og:description"
-      content="Aplicação web autocontida de Bingo Tradicional de 75 bolas (B-I-N-G-O) com Modo Apresentador, Cartela Interativa 5x5 e cache local de 30 minutos."
+      content="Aplicação web autocontida de Bingo Tradicional de 75 bolas (B-I-N-G-O) com Modo Apresentador, Cartela Interativa 5x5 e salvamento local."
     />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -1334,6 +1334,15 @@
           transition-duration: 0.01ms !important;
         }
       }
+      #checker{max-width:min(92vw,32rem);border:0;border-radius:1rem;padding:1.5rem}#checker::backdrop{background:#10261dc9}#checker input{margin:.6rem 0}#resume-panel{margin:1rem 0}
+      .projection .master-board-panel,.projection .js-session-indicator{display:none}
+      .projection .presenter-layout{display:block;max-width:80rem;width:100%;margin:auto}
+      .projection .globe-arena{min-height:0;padding:1vh}
+      .projection .drawn-ball-orb{width:clamp(9rem,32vh,27rem);height:clamp(9rem,32vh,27rem)}
+      .projection .orb-number{font-size:clamp(4rem,16vh,14rem);line-height:1}
+      .projection .orb-letter{font-size:clamp(2rem,6vh,5rem)}
+      .projection .history-token-num{font-size:clamp(1.35rem,4vh,3rem)} .projection .history-token-letter{font-size:1rem}
+      #projection[aria-pressed=true]{background:#245340;color:white}
     </style>
   </head>
   <body><nav style="padding:10px 4vw;background:#211932"><a href="/" style="color:white;font:700 16px system-ui">‹ Central de Jogos</a></nav>
@@ -1363,7 +1372,7 @@
           </div>
 
           <div class="session-status tabular-nums" id="home-session-indicator">
-            Sessão ativa • expira em 30 min
+            Partida local
           </div>
         </div>
 
@@ -1373,9 +1382,10 @@
             <h1 id="hero-heading" class="hero-title">Bingo tradicional pronto para sortear e jogar</h1>
             <p class="hero-subtitle">
               Escolha entre o globo de sorteio para projetar na sala ou a cartela interativa 5x5 para
-              acompanhar pelo celular. Seu progresso fica salvo automaticamente por 30 minutos.
+              acompanhar pelo celular. Seu progresso fica salvo automaticamente neste navegador.
             </p>
 
+            <div id="resume-panel" class="hidden"><button id="resume" class="btn btn-primary">Continuar partida</button> <button id="fresh" class="btn btn-ghost">Nova partida</button></div>
             <div class="mode-grid">
               <button type="button" id="btn-enter-presenter" class="mode-card">
                 <span class="mode-card-icon presenter" aria-hidden="true">
@@ -1401,7 +1411,7 @@
                 </span>
                 <h2 class="mode-card-title">Modo Jogador</h2>
                 <p class="mode-card-desc">
-                  Cartela única 5x5 com espaço FREE, marcação tátil e detecção automática de BINGO.
+                  Cartela única 5x5 com espaço livre, marcação tátil e detecção automática de BINGO.
                 </p>
                 <span class="mode-card-cta">Abrir Cartela →</span>
               </button>
@@ -1463,7 +1473,7 @@
 
         <div class="control-hint-bar">
           <span>Espaço Sortear bola (Apresentador) · Clique Marcar número (Jogador) · M Silenciar som</span>
-          <span>Persistência local de 30 minutos no navegador</span>
+          <span>Salvamento local da partida</span>
         </div>
       </main>
 
@@ -1479,11 +1489,13 @@
 
           <div class="hud-right">
             <span class="session-status tabular-nums js-session-indicator">
-              Sessão ativa • expira em 30 min
+              Partida local
             </span>
             <button type="button" class="btn btn-ghost js-mute-toggle" aria-pressed="false">
               Som: Ligado
             </button>
+            <button type="button" id="projection" aria-pressed="false" class="btn btn-ghost">Modo projeção</button>
+            <button type="button" id="check-open" class="btn btn-ghost">Conferir bingo</button>
             <button type="button" id="btn-open-reset-modal" class="btn btn-danger-outline">
               Reiniciar Jogo
             </button>
@@ -1575,7 +1587,7 @@
 
           <div class="hud-right">
             <span class="session-status tabular-nums js-session-indicator">
-              Sessão ativa • expira em 30 min
+              Partida local
             </span>
             <button type="button" class="btn btn-ghost js-mute-toggle" aria-pressed="false">
               Som: Ligado
@@ -1631,6 +1643,11 @@
       </section>
     </div>
 
+    <dialog id="checker"><h2>Conferir bingo</h2><form id="check-form">
+      <label for="claim">Código da combinação exibido na cartela</label>
+      <input id="claim" class="qr-input" required placeholder="Ex.: L1 05 20 31 49 66" autocomplete="off">
+      <button class="btn btn-primary">Conferir números</button></form>
+      <p id="verdict" role="status"></p><form method="dialog"><button class="btn btn-modal-cancel">Fechar</button></form></dialog>
     <!-- ==================== QR CODE / SHARE MODAL ==================== -->
     <div id="qr-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
       <div class="modal-box qr-modal-box">
@@ -1703,7 +1720,8 @@
         'use strict';
 
         const STORAGE_KEY = 'bingo75_session_v1';
-        const SESSION_TTL_MS = 30 * 60 * 1000;
+        let storageAvailable = true;
+        let restoredMode = null;
 
         const COLUMNS = [
           { letter: 'B', min: 1, max: 15, colorClass: 'col-b-bg', textClass: 'col-b-text', hex: '#1d4ed8' },
@@ -1812,7 +1830,6 @@
 
         function createFreshState(mode, roomCodeOverride, cardOverride) {
           return {
-            expiresAt: Date.now() + SESSION_TTL_MS,
             mode: mode || 'home',
             roomCode: roomCodeOverride || generateRoomCode(),
             muted: false,
@@ -1825,19 +1842,17 @@
 
         function isValidStateShape(obj) {
           if (!obj || typeof obj !== 'object') return false;
-          if (typeof obj.expiresAt !== 'number') return false;
-          if (!['home', 'presenter', 'player'].includes(obj.mode)) return false;
-          if (!obj.presenter || !Array.isArray(obj.presenter.drawn)) return false;
-          if (
-            !obj.player ||
-            !Array.isArray(obj.player.card) ||
-            obj.player.card.length !== 5 ||
-            !Array.isArray(obj.player.marked) ||
-            obj.player.marked.length !== 5
-          ) {
-            return false;
-          }
-          return true;
+          if (!['home','presenter','player'].includes(obj.mode)) return false;
+          const drawn = obj.presenter?.drawn;
+          if (!Array.isArray(drawn) || new Set(drawn).size !== drawn.length ||
+              !drawn.every(n => Number.isInteger(n) && n >= 1 && n <= 75)) return false;
+          const card = obj.player?.card, marks = obj.player?.marked;
+          const grid = rows => Array.isArray(rows) && rows.length === 5 &&
+            rows.every(row => Array.isArray(row) && row.length === 5);
+          return grid(card) && grid(marks) && card[2][2] === 'FREE' &&
+            card.every((row,r) => row.every((n,c) => (r===2 && c===2) || Number.isInteger(n))) &&
+            Boolean(decodeCardParam(encodeCardParam(card))) &&
+            marks.every(row => row.every(value => typeof value === 'boolean'));
         }
 
         function loadState() {
@@ -1859,8 +1874,7 @@
               return fresh;
             }
             const parsed = JSON.parse(raw);
-            if (!isValidStateShape(parsed) || Date.now() >= parsed.expiresAt) {
-              localStorage.removeItem(STORAGE_KEY);
+            if (!isValidStateShape(parsed)) {
               const fresh = createFreshState(
                 wantsPlayerLink ? 'player' : 'home',
                 urlRoom || undefined,
@@ -1882,14 +1896,16 @@
               } else if (urlRoom && urlRoom !== parsed.roomCode) {
                 parsed.roomCode = urlRoom;
                 parsed.player = createNewCard();
-                parsed.expiresAt = Date.now() + SESSION_TTL_MS;
               }
               if (urlRoom) parsed.roomCode = urlRoom;
               saveState(parsed);
             }
+            if (!wantsPlayerLink && (parsed.presenter.drawn.length || parsed.player.marked.flat().filter(Boolean).length > 1 || parsed.mode !== 'home')) {
+              restoredMode = parsed.mode === 'home' ? (parsed.presenter.drawn.length ? 'presenter' : 'player') : parsed.mode;
+              parsed.mode = 'home';
+            }
             return parsed;
           } catch (e) {
-            localStorage.removeItem(STORAGE_KEY);
             const fresh = createFreshState(
               wantsPlayerLink ? 'player' : 'home',
               urlRoom || undefined,
@@ -1903,8 +1919,9 @@
         function saveState(nextState) {
           try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+            storageAvailable = true;
           } catch (e) {
-            // Ignore storage quota errors cleanly
+            storageAvailable = false;
           }
         }
 
@@ -2557,24 +2574,8 @@
           }, 3200);
         }
 
-        /* ==================== SESSION TTL MONITOR ==================== */
-        function updateSessionCountdown() {
-          const now = Date.now();
-          const remainingMs = state.expiresAt - now;
-          if (remainingMs <= 0) {
-            const currentMode = state.mode;
-            localStorage.removeItem(STORAGE_KEY);
-            state = createFreshState(currentMode);
-            saveState(state);
-            renderAll();
-            showToast('Sessão de 30 minutos expirada. Nova sessão limpa iniciada.');
-            return;
-          }
-          const mins = Math.max(1, Math.ceil(remainingMs / 60000));
-          const baseText =
-            remainingMs < 60000
-              ? 'Sessão ativa • expira em < 1 min'
-              : 'Sessão ativa • expira em ' + mins + ' min';
+        function updateStorageStatus() {
+          const baseText = storageAvailable ? 'Partida salva neste navegador' : 'Progresso temporário: o navegador bloqueou o salvamento';
           const playerText = state.roomCode ? 'Sala ' + state.roomCode + ' · ' + baseText : baseText;
           homeSessionIndicator.textContent = baseText;
           sessionIndicators.forEach((el) => {
@@ -2583,46 +2584,39 @@
         }
 
         /* ==================== WINNING LINE DETECTION ==================== */
+        const indices = [0,1,2,3,4];
+        const lines = [
+          ...indices.map(r => ({code:'L'+(r+1),label:'Linha '+(r+1),cells:indices.map(c=>[r,c])})),
+          ...indices.map(c => ({code:'C'+COLUMNS[c].letter,label:'Coluna '+COLUMNS[c].letter,cells:indices.map(r=>[r,c])})),
+          {code:'D1',label:'Diagonal principal',cells:indices.map(i=>[i,i])},
+          {code:'D2',label:'Diagonal secundária',cells:indices.map(i=>[i,4-i])}
+        ];
+        function numberedCells(line) {return line.cells.filter(([r,c]) => r!==2 || c!==2);}
+        function verifyClaim(input,drawn) {
+          const [code,...tokens] = input.trim().toUpperCase().split(/[\s,;]+/);
+          const line = lines.find(l=>l.code===code);
+          if (!line) return 'Confira o código da linha, coluna ou diagonal na cartela.';
+          const cells = numberedCells(line), nums=tokens.map(Number);
+          if (nums.length!==cells.length || new Set(nums).size!==nums.length ||
+              !cells.every(([,c],i)=>/^\d{1,2}$/.test(tokens[i]) && nums[i]>=COLUMNS[c].min && nums[i]<=COLUMNS[c].max))
+            return 'Os números informados não correspondem à combinação. Confira a ordem na cartela.';
+          const missing=nums.filter(n=>!drawn.includes(n));
+          return missing.length ? 'Ainda não sorteados: '+missing.join(', ') : 'Combinação confirmada: todos os números foram sorteados.';
+        }
         function evaluateCardWins(marked) {
           const winningCells = new Set();
           const patterns = [];
 
-          // Rows
-          for (let r = 0; r < 5; r++) {
-            if (marked[r].every(Boolean)) {
-              patterns.push('Linha ' + (r + 1));
-              for (let c = 0; c < 5; c++) winningCells.add(r + '-' + c);
-            }
-          }
-
-          // Columns
-          for (let c = 0; c < 5; c++) {
-            let full = true;
-            for (let r = 0; r < 5; r++) {
-              if (!marked[r][c]) {
-                full = false;
-                break;
-              }
-            }
-            if (full) {
-              patterns.push('Coluna ' + COLUMNS[c].letter);
-              for (let r = 0; r < 5; r++) winningCells.add(r + '-' + c);
-            }
-          }
-
-          // Main diagonal
-          if ([0, 1, 2, 3, 4].every((i) => marked[i][i])) {
-            patterns.push('Diagonal Principal');
-            for (let i = 0; i < 5; i++) winningCells.add(i + '-' + i);
-          }
-
-          // Anti-diagonal
-          if ([0, 1, 2, 3, 4].every((i) => marked[i][4 - i])) {
-            patterns.push('Diagonal Secundária');
-            for (let i = 0; i < 5; i++) winningCells.add(i + '-' + (4 - i));
+          const claims = [];
+          for (const line of lines) {
+            if (!line.cells.every(([r,c]) => marked[r][c])) continue;
+            patterns.push(line.label);
+            claims.push(line);
+            line.cells.forEach(([r,c]) => winningCells.add(r+'-'+c));
           }
 
           return {
+            claims,
             hasWin: patterns.length > 0,
             patterns,
             winningCells,
@@ -2632,6 +2626,7 @@
 
         /* ==================== RENDERERS ==================== */
         function renderScreen() {
+          document.getElementById('resume-panel').classList.toggle('hidden', !restoredMode);
           screenHome.classList.toggle('hidden', state.mode !== 'home');
           screenPresenter.classList.toggle('hidden', state.mode !== 'presenter');
           screenPlayer.classList.toggle('hidden', state.mode !== 'player');
@@ -2756,9 +2751,10 @@
           if (winInfo.hasWin) {
             victoryBanner.classList.remove('hidden');
             victoryPatternText.textContent =
-              'Vitória em: ' + winInfo.patterns.join(' · ') + ' — Confira os números ao lado.';
+              winInfo.claims.map(line => line.label + ' — ' + line.code + ' ' +
+                numberedCells(line).map(([r,c])=>pad2(card[r][c])).join(' ')).join(' · ');
             verifyHelpText.textContent =
-              'Cartela premiada! Leia os números marcados abaixo para conferência com o apresentador.';
+              'Leia ao apresentador um dos códigos de combinação exibidos no aviso de bingo.';
           } else {
             victoryBanner.classList.add('hidden');
             verifyHelpText.textContent =
@@ -2785,8 +2781,8 @@
 
               if (isFree) {
                 btn.innerHTML =
-                  '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><span>FREE</span>';
-                btn.setAttribute('aria-label', 'Espaço central FREE sempre marcado');
+                  '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><span>Livre</span>';
+                btn.setAttribute('aria-label', 'Espaço central livre sempre marcado');
                 btn.disabled = true;
               } else {
                 btn.textContent = pad2(val);
@@ -2827,7 +2823,7 @@
           markedItems.forEach((item) => {
             const chip = document.createElement('span');
             chip.className = item.isWinningCell ? 'marked-chip is-win tabular-nums' : 'marked-chip tabular-nums';
-            const label = item.value === 'FREE' ? 'FREE' : pad2(item.value);
+            const label = item.value === 'FREE' ? 'Livre' : pad2(item.value);
             chip.innerHTML =
               '<span class="marked-chip-col ' +
               item.textClass +
@@ -2845,7 +2841,7 @@
           renderMuteButtons();
           renderPresenter(Boolean(animateNewBall));
           renderPlayer();
-          updateSessionCountdown();
+          updateStorageStatus();
         }
 
         /* ==================== ACTIONS ==================== */
@@ -2867,21 +2863,25 @@
 
         function setMode(nextMode) {
           cancelActiveSpin();
+          if (nextMode === 'home') restoredMode = state.mode;
+          screenPresenter.classList.remove('projection');
+          document.getElementById('projection').setAttribute('aria-pressed','false');
           state.mode = nextMode;
           saveState(state);
           renderScreen();
           if (nextMode === 'presenter') renderPresenter(false);
-          updateSessionCountdown();
+          updateStorageStatus();
+        }
+
+        function pickBall(drawn) {
+          const used = new Set(drawn);
+          const available = Array.from({length:75}, (_,i)=>i+1).filter(n=>!used.has(n));
+          return available.length ? available[Math.floor(Math.random()*available.length)] : null;
         }
 
         function drawNextBall() {
           if (isDrawing || state.presenter.drawn.length >= 75) return;
-          const drawnSet = new Set(state.presenter.drawn);
-          const available = [];
-          for (let i = 1; i <= 75; i++) {
-            if (!drawnSet.has(i)) available.push(i);
-          }
-          if (available.length === 0) return;
+
 
           isDrawing = true;
 
@@ -2912,7 +2912,7 @@
 
           drawSpinTimer = setTimeout(function () {
             cancelActiveSpin();
-            const picked = available[Math.floor(Math.random() * available.length)];
+            const picked = pickBall(state.presenter.drawn);
             state.presenter.drawn.push(picked);
             saveState(state);
             playDrawSound();
@@ -2940,7 +2940,10 @@
           }
 
           saveState(state);
+          const restoreFocus = playerCardGrid.contains(document.activeElement);
           renderPlayer();
+          if (restoreFocus) playerCardGrid.children[r*5+c].focus({preventScroll:true});
+          updateStorageStatus();
         }
 
         function openConfirmModal(title, desc, confirmLabel, onConfirm) {
@@ -2958,6 +2961,21 @@
         }
 
         /* ==================== EVENT LISTENERS ==================== */
+        document.getElementById('resume').onclick = () => setMode(restoredMode);
+        document.getElementById('fresh').onclick = () => openConfirmModal('Nova partida','Descartar a cartela e o histórico atuais?', 'Nova partida', () => {
+          restoredMode=null; state=createFreshState('home'); saveState(state); renderAll(false);
+        });
+        document.getElementById('projection').onclick = e => {
+          e.currentTarget.setAttribute('aria-pressed',String(screenPresenter.classList.toggle('projection')));
+        };
+        const checker=document.getElementById('checker');
+        document.getElementById('check-open').onclick = () => {
+          document.getElementById('verdict').textContent=''; document.getElementById('claim').value=''; checker.showModal();
+        };
+        document.getElementById('check-form').onsubmit = e => {
+          e.preventDefault();
+          document.getElementById('verdict').textContent=verifyClaim(document.getElementById('claim').value,state.presenter.drawn);
+        };
         document.getElementById('btn-enter-presenter').addEventListener('click', function () {
           setMode('presenter');
         });
@@ -2990,15 +3008,14 @@
         document.getElementById('btn-open-reset-modal').addEventListener('click', function () {
           openConfirmModal(
             'Reiniciar Jogo',
-            'Isso irá apagar todos os números sorteados, zerar o cache atual e iniciar um novo ciclo de 30 minutos.',
+            'Isso irá apagar todos os números sorteados, apagar as marcações da cartela e iniciar outra partida.',
             'Reiniciar Jogo',
             function () {
               cancelActiveSpin();
-              localStorage.removeItem(STORAGE_KEY);
               state = createFreshState('presenter');
               saveState(state);
               renderAll(false);
-              showToast('Jogo reiniciado! Novo ciclo de 30 minutos iniciado.');
+              showToast('Jogo reiniciado! Nova partida iniciada.');
             }
           );
         });
@@ -3006,16 +3023,13 @@
         document.getElementById('btn-open-newcard-modal').addEventListener('click', function () {
           openConfirmModal(
             'Gerar Nova Cartela',
-            'Uma nova cartela aleatória 5x5 será criada e suas marcações atuais serão limpas (mantendo a sessão de 30 minutos).',
+            'Uma nova cartela aleatória 5x5 será criada e suas marcações atuais serão limpas.',
             'Gerar Cartela',
             function () {
               state.player = createNewCard();
-              if (Date.now() >= state.expiresAt) {
-                state.expiresAt = Date.now() + SESSION_TTL_MS;
-              }
               saveState(state);
               renderPlayer();
-              updateSessionCountdown();
+              updateStorageStatus();
               showToast('Nova cartela 5x5 gerada.');
             }
           );
@@ -3047,7 +3061,7 @@
           state.roomCode = generateRoomCode();
           saveState(state);
           updateQrModal();
-          updateSessionCountdown();
+          updateStorageStatus();
           showToast('Novo código de sala gerado: ' + state.roomCode);
         });
 
@@ -3095,6 +3109,7 @@
         });
 
         document.addEventListener('keydown', function (e) {
+          if (checker.open) return;
           if (!qrModal.classList.contains('hidden')) {
             if (e.key === 'Escape') qrModal.classList.add('hidden');
             return;
@@ -3124,7 +3139,6 @@
 
         /* ==================== BOOT ==================== */
         renderAll(false);
-        setInterval(updateSessionCountdown, 1000);
       })();
     </script>
   </body>
