@@ -21,7 +21,6 @@ const inputModes = [
   { value: 'text', title: 'Nomes' },
   { value: 'file', title: 'Arquivo' },
   { value: 'number', title: 'Números' },
-  { value: 'event', title: 'Confraternização' },
 ] as const;
 
 export default function RafflePage() {
@@ -40,7 +39,7 @@ export default function RafflePage() {
   const [winnersCount, setWinnersCount] = useState('1');
   const [customSeconds, setCustomSeconds] = useState('5');
   const [isDrawing, setIsDrawing] = useState(false);
-  const [isFinalDraw, setIsFinalDraw] = useState(false);
+  const [isSingleWinner, setIsSingleWinner] = useState(false);
   const [finalOnlyUndrawn, setFinalOnlyUndrawn] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [winners, setWinners] = useState<Participant[]>([]);
@@ -215,7 +214,6 @@ export default function RafflePage() {
   const availableItems = React.useMemo(() => {
     return getDrawCandidates(items, drawnItems);
   }, [items, drawnItems]);
-  const finalCandidates = React.useMemo(() => getDrawCandidates(items, drawnItems, true, finalOnlyUndrawn), [items, drawnItems, finalOnlyUndrawn]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -314,7 +312,7 @@ export default function RafflePage() {
     }
 
     setView('drawing');
-    setIsFinalDraw(finalDraw);
+    setIsSingleWinner(actualWinnersCount === 1);
     setIsDrawing(true);
     setCountdown(durationSeconds);
     setWinners([]);
@@ -336,7 +334,7 @@ export default function RafflePage() {
     }, 1000);
 
     // Shuffling animation logic
-    if (!finalDraw) {
+    if (actualWinnersCount > 1) {
       shuffleRef.current = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * candidates.length);
         setShufflingItem(candidates[randomIndex]);
@@ -380,10 +378,10 @@ export default function RafflePage() {
     setHistory(prev => [...prev, newResult]);
 
     confetti({
-      particleCount: finalDraw ? 300 : 150,
-      spread: finalDraw ? 120 : 70,
+      particleCount: count === 1 ? 300 : 150,
+      spread: count === 1 ? 120 : 70,
       origin: { y: 0.6 },
-      colors: finalDraw ? ['#6942C8', '#432889', '#D96427', '#FFFFFF'] : ['#6942C8', '#432889', '#D96427']
+      colors: count === 1 ? ['#6942C8', '#432889', '#D96427', '#FFFFFF'] : ['#6942C8', '#432889', '#D96427']
     });
   };
 
@@ -393,7 +391,7 @@ export default function RafflePage() {
     drawingActiveRef.current = false;
     setWinners([]);
     setIsDrawing(false);
-    setIsFinalDraw(false);
+    setIsSingleWinner(false);
     setCountdown(durationSeconds);
     setHistory([]);
     setDrawnItems([]);
@@ -587,7 +585,7 @@ export default function RafflePage() {
                   </div>
 
                   <div className="space-y-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-1 p-1.5 bg-stone-100 rounded-2xl" aria-label="Tipo de sorteio">
+                    <div className="grid grid-cols-3 gap-1 p-1.5 bg-stone-100 rounded-2xl" aria-label="Tipo de sorteio">
                       {inputModes.map(mode => (
                         <button
                           key={mode.value}
@@ -804,17 +802,17 @@ export default function RafflePage() {
                 initial={{ opacity: 0, scale: 1.1 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className={`absolute inset-0 ${isFinalDraw ? 'bg-[#102a23]' : 'bg-[#432889]'} flex flex-col items-center justify-start p-8 md:p-12 text-white overflow-hidden`}
+                className={`absolute inset-0 ${isSingleWinner ? 'bg-[#102a23]' : 'bg-[#432889]'} flex flex-col items-center justify-start p-8 md:p-12 text-white overflow-hidden`}
               >
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
                 <div className="absolute -bottom-48 -right-48 w-96 h-96 bg-[#6942C8] rounded-full blur-[120px] opacity-30"></div>
                 <div className="absolute -top-48 -left-48 w-96 h-96 bg-[#D96427] rounded-full blur-[120px] opacity-20"></div>
-                {isFinalDraw && !isDrawing && winners.length > 0 && <FinalFireworks />}
+                {isSingleWinner && !isDrawing && winners.length > 0 && <FinalFireworks />}
 
                 <AnimatePresence mode="wait">
-                  {isDrawing && isFinalDraw ? (
-                    <FinalDrawAnimation key="final-draw" countdown={countdown} participants={finalCandidates.length} onlyUndrawn={finalOnlyUndrawn} />
+                  {isDrawing && isSingleWinner ? (
+                    <FinalDrawAnimation key="final-draw" countdown={countdown} participants={availableItems.length} />
                   ) : isDrawing ? (
                     <motion.div 
                       key="active-draw"
@@ -869,8 +867,8 @@ export default function RafflePage() {
                     >
                       <div className="text-center space-y-2 shrink-0 relative">
                         
-                        {isFinalDraw && <p className="text-4xl sm:text-5xl font-black text-[#D96427]">Parabéns!</p>}
-                        <h2 className={`text-sm font-black uppercase tracking-[0.4em] ${isFinalDraw ? 'text-amber-300' : 'text-[#D96427]'}`}>{isFinalDraw ? 'Ganhador do sorteio final' : 'Ganhadores sorteados'}</h2>
+                        {isSingleWinner && <p className="text-4xl sm:text-5xl font-black text-[#D96427]">Parabéns!</p>}
+                        <h2 className={`text-sm font-black uppercase tracking-[0.4em] ${isSingleWinner ? 'text-amber-300' : 'text-[#D96427]'}`}>{isSingleWinner ? 'Ganhador do sorteio' : 'Ganhadores sorteados'}</h2>
                         <div className="h-1.5 w-48 bg-[#D96427] mx-auto rounded-full shadow-[0_0_15px_rgba(244,121,32,0.5)]"></div>
                         
                         <div className="flex justify-center gap-2 pt-2 md:absolute md:right-0 md:top-0 md:pt-0">
@@ -910,15 +908,15 @@ export default function RafflePage() {
                               key={`winner-${idx}-${winner.id}`}
                               initial={{ x: -40, opacity: 0 }}
                               animate={{ x: 0, opacity: 1 }}
-                              transition={isFinalDraw ? { type: 'spring', stiffness: 120, damping: 14 } : { delay: idx * 0.1 }}
+                              transition={isSingleWinner ? { type: 'spring', stiffness: 120, damping: 14 } : { delay: idx * 0.1 }}
                               className={`${
                                 isNumberMode 
                                   ? 'py-4 px-8 flex-col text-center min-w-[160px] aspect-square justify-center' 
                                   : (isFullscreen ? 'py-4 px-10' : 'py-3 px-8') + ' flex-row justify-between w-full max-w-4xl'
-                              } ${isFinalDraw ? 'bg-amber-200/10 border-amber-300/50 shadow-amber-300/10' : 'bg-white/10 border-white/20'} border rounded-[1rem] flex items-center group hover:bg-white/20 transition-all backdrop-blur-xl shadow-2xl`}
+                              } ${isSingleWinner ? 'bg-amber-200/10 border-amber-300/50 shadow-amber-300/10' : 'bg-white/10 border-white/20'} border rounded-[1rem] flex items-center group hover:bg-white/20 transition-all backdrop-blur-xl shadow-2xl`}
                             >
                               <div className={`flex min-w-0 items-center ${isNumberMode ? 'flex-col gap-1' : 'gap-4'}`}>
-                                {!isFinalDraw && <span className={`${
+                                {!isSingleWinner && <span className={`${
                                   isNumberMode 
                                   ? 'text-xl mb-1'
                                   : (isFullscreen ? 'text-3xl' : 'text-2xl')
@@ -937,7 +935,7 @@ export default function RafflePage() {
                                   ? 'w-5 h-5 mt-1' 
                                   : (isFullscreen ? 'w-14 h-14' : 'w-10 h-10')
                               } rounded-full bg-[#D96427] flex items-center justify-center shadow-2xl shadow-[#D96427]/50 shrink-0`}>
-                                {isFinalDraw ? <Trophy className={`${isNumberMode ? 'w-3 h-3' : 'w-6 h-6'} text-white`} /> : <CheckCircle2 className={`${isNumberMode ? 'w-2.5 h-2.5' : (isFullscreen ? 'w-8 h-8' : 'w-5 h-5')} text-white`} />}
+                                {isSingleWinner ? <Trophy className={`${isNumberMode ? 'w-3 h-3' : 'w-6 h-6'} text-white`} /> : <CheckCircle2 className={`${isNumberMode ? 'w-2.5 h-2.5' : (isFullscreen ? 'w-8 h-8' : 'w-5 h-5')} text-white`} />}
                               </div>
                             </motion.div>
                           );
