@@ -1,0 +1,3132 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bingo 75 Online — Globo &amp; Cartela B-I-N-G-O</title>
+    <meta
+      name="description"
+      content="Aplicação web autocontida de Bingo Tradicional de 75 bolas (B-I-N-G-O) com Modo Apresentador, Cartela Interativa 5x5 e cache local de 30 minutos."
+    />
+    <meta property="og:title" content="Bingo 75 Online — Globo &amp; Cartela B-I-N-G-O" />
+    <meta
+      property="og:description"
+      content="Aplicação web autocontida de Bingo Tradicional de 75 bolas (B-I-N-G-O) com Modo Apresentador, Cartela Interativa 5x5 e cache local de 30 minutos."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --felt-deep: #093024;
+        --felt-mid: #0f4c3a;
+        --felt-surface: #135a45;
+        --felt-border: rgba(255, 255, 255, 0.14);
+        --paper: #ffffff;
+        --paper-soft: #f4f7f5;
+        --ink: #0f172a;
+        --ink-muted: #475569;
+        --ink-on-felt: #f8fafc;
+        --ink-on-felt-muted: #b7d7c8;
+        --gold: #f59e0b;
+        --gold-bright: #fbbf24;
+        --gold-dark: #b45309;
+        --crimson: #e11d48;
+        --crimson-dark: #be123c;
+        --emerald: #10b981;
+        --col-b: #1d4ed8;
+        --col-i: #dc2626;
+        --col-n: #d97706;
+        --col-g: #059669;
+        --col-o: #6d28d9;
+        --radius-card: 18px;
+        --radius-inner: 10px;
+        --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background-color: var(--felt-deep);
+        color: var(--ink-on-felt);
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      body {
+        background-image:
+          radial-gradient(circle at 20% 15%, rgba(22, 108, 82, 0.55) 0%, transparent 50%),
+          radial-gradient(circle at 82% 85%, rgba(6, 40, 29, 0.85) 0%, transparent 55%),
+          repeating-linear-gradient(
+            45deg,
+            rgba(255, 255, 255, 0.012) 0px,
+            rgba(255, 255, 255, 0.012) 1px,
+            transparent 1px,
+            transparent 3px
+          );
+      }
+
+      .font-display {
+        font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
+      }
+
+      .font-num {
+        font-family: 'Bricolage Grotesque', 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .tabular-nums {
+        font-variant-numeric: tabular-nums;
+      }
+
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: inherit;
+      }
+
+      button:focus-visible,
+      [tabindex]:focus-visible {
+        outline: 3px solid var(--gold-bright);
+        outline-offset: 2px;
+      }
+
+      /* Confetti Canvas */
+      #confetti-canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 90;
+      }
+
+      /* App Shell */
+      .app-shell {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* Top HUD (Playing Screens) */
+      .game-hud {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 24px;
+        border-bottom: 1px solid var(--felt-border);
+        background: rgba(9, 48, 36, 0.92);
+      }
+
+      .hud-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+      }
+
+      .hud-title {
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .hud-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+      }
+
+      .session-status {
+        font-size: 0.8125rem;
+        color: var(--ink-on-felt-muted);
+        white-space: nowrap;
+        letter-spacing: 0.01em;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition:
+          transform 140ms var(--ease-snap),
+          background-color 140ms var(--ease-snap),
+          border-color 140ms var(--ease-snap),
+          opacity 140ms var(--ease-snap);
+      }
+
+      .btn:active:not(:disabled) {
+        transform: scale(0.97);
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn-ghost {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        color: var(--ink-on-felt);
+        padding: 8px 14px;
+      }
+
+      .btn-ghost:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      .btn-danger-outline {
+        background: rgba(225, 29, 72, 0.14);
+        border: 1px solid rgba(251, 113, 133, 0.42);
+        color: #ffe4e6;
+        padding: 8px 14px;
+      }
+
+      .btn-danger-outline:hover:not(:disabled) {
+        background: rgba(225, 29, 72, 0.28);
+      }
+
+      .btn-primary {
+        background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+        color: #1c1917;
+        font-weight: 700;
+        box-shadow: 0 4px 0 #b45309, 0 10px 24px rgba(0, 0, 0, 0.35);
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: linear-gradient(180deg, #fcd34d 0%, #f59e0b 100%);
+        transform: translateY(-1px);
+      }
+
+      .btn-primary:active:not(:disabled) {
+        transform: translateY(2px);
+        box-shadow: 0 2px 0 #b45309, 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn-draw-xl {
+        width: 100%;
+        min-height: 58px;
+        padding: 16px 28px;
+        font-size: 1.125rem;
+        border-radius: 14px;
+      }
+
+      /* ==================== TITLE / HOME SCREEN ==================== */
+      .home-screen {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        max-width: 1200px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 28px 24px 20px;
+      }
+
+      .home-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .brand-mark {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-weight: 800;
+        font-size: 1.15rem;
+        letter-spacing: -0.02em;
+      }
+
+      .home-hero {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 40px;
+        align-items: center;
+        margin: auto 0;
+        padding: 24px 0;
+      }
+
+      .hero-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .hero-kicker {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gold-bright);
+        letter-spacing: 0.02em;
+      }
+
+      .hero-title {
+        margin: 0;
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: clamp(2.4rem, 4.4vw, 3.85rem);
+        font-weight: 800;
+        line-height: 1.04;
+        letter-spacing: -0.03em;
+        text-wrap: balance;
+        color: #ffffff;
+      }
+
+      .hero-subtitle {
+        margin: 0;
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: var(--ink-on-felt-muted);
+        max-width: 48ch;
+      }
+
+      .mode-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 8px;
+      }
+
+      .mode-card {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        gap: 12px;
+        padding: 22px;
+        border-radius: var(--radius-card);
+        background: var(--paper);
+        color: var(--ink);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+        transition:
+          transform 160ms var(--ease-snap),
+          box-shadow 160ms var(--ease-snap);
+      }
+
+      .mode-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 38px rgba(0, 0, 0, 0.36);
+      }
+
+      .mode-card:active {
+        transform: translateY(0);
+      }
+
+      .mode-card-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .mode-card-icon.presenter {
+        background: #fef3c7;
+        color: #b45309;
+      }
+
+      .mode-card-icon.player {
+        background: #d1fae5;
+        color: #047857;
+      }
+
+      .mode-card-title {
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--ink);
+      }
+
+      .mode-card-desc {
+        margin: 0;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: var(--ink-muted);
+      }
+
+      .mode-card-cta {
+        margin-top: auto;
+        padding-top: 6px;
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: var(--felt-mid);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .hero-artwork {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+
+      .hero-svg-stage {
+        width: 100%;
+        max-width: 460px;
+        height: auto;
+        filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.38));
+      }
+
+      .control-hint-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding-top: 14px;
+        border-top: 1px solid var(--felt-border);
+        font-size: 0.8125rem;
+        color: var(--ink-on-felt-muted);
+        flex-wrap: wrap;
+      }
+
+      /* ==================== PRESENTER MODE ==================== */
+      .presenter-layout {
+        flex: 1;
+        max-width: 1360px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 20px 24px 28px;
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 24px;
+        align-items: stretch;
+      }
+
+      .surface-panel {
+        background: var(--paper);
+        color: var(--ink);
+        border-radius: var(--radius-card);
+        padding: 22px;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.26);
+      }
+
+      .presenter-stage {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .stage-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .stage-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--ink-muted);
+      }
+
+      .ball-counter {
+        font-size: 0.9375rem;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .globe-arena {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+        border-radius: 14px;
+        background: radial-gradient(circle at 50% 35%, #165e48 0%, #093024 100%);
+        color: #ffffff;
+        min-height: 250px;
+      }
+
+      .drawn-ball-orb {
+        width: 158px;
+        height: 158px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 32% 28%, #ffffff 0%, #f1f5f9 62%, #cbd5e1 100%);
+        color: var(--ink);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow:
+          inset 0 -10px 18px rgba(15, 23, 42, 0.18),
+          0 16px 32px rgba(0, 0, 0, 0.45);
+        border: 7px solid var(--col-b);
+        transition: transform 200ms var(--ease-snap);
+      }
+
+      .drawn-ball-orb.idle {
+        border-color: #94a3b8;
+        opacity: 0.92;
+      }
+
+      .drawn-ball-orb.pop {
+        animation: ballPop 360ms var(--ease-snap);
+      }
+
+      @keyframes ballPop {
+        0% {
+          transform: scale(0.65) rotate(-14deg);
+          opacity: 0.4;
+        }
+        65% {
+          transform: scale(1.06) rotate(3deg);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(1) rotate(0deg);
+          opacity: 1;
+        }
+      }
+
+      .orb-letter {
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 1.65rem;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: 0.04em;
+      }
+
+      .orb-number {
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 4rem;
+        font-weight: 800;
+        line-height: 0.95;
+        letter-spacing: -0.03em;
+      }
+
+      .orb-caption {
+        margin-top: 14px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #e2e8f0;
+      }
+
+      /* 3s Spinning Bingo Globe */
+      .spinning-globe-wrap {
+        width: 158px;
+        height: 158px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .spinning-globe-svg {
+        width: 158px;
+        height: 158px;
+        overflow: visible;
+      }
+
+      .globe-cage-rotor {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: globeSpin3s 3000ms cubic-bezier(0.25, 0.8, 0.35, 1) forwards;
+      }
+
+      .globe-inner-balls {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: ballsTumble 420ms ease-in-out infinite alternate;
+      }
+
+      @keyframes globeSpin3s {
+        0% {
+          transform: rotate(0deg) scale(0.95);
+        }
+        15% {
+          transform: rotate(220deg) scale(1.03);
+        }
+        85% {
+          transform: rotate(1035deg) scale(1.02);
+        }
+        100% {
+          transform: rotate(1080deg) scale(1);
+        }
+      }
+
+      @keyframes ballsTumble {
+        0% {
+          transform: translateY(-3px) rotate(-18deg);
+        }
+        100% {
+          transform: translateY(4px) rotate(18deg);
+        }
+      }
+
+      .history-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .history-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--ink-muted);
+      }
+
+      .history-strip {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+      }
+
+      .history-token {
+        height: 56px;
+        border-radius: 12px;
+        background: var(--paper-soft);
+        border: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1px;
+      }
+
+      .history-token.newest {
+        background: #fef3c7;
+        border-color: #f59e0b;
+      }
+
+      .history-token.empty {
+        color: #94a3b8;
+        font-size: 0.875rem;
+      }
+
+      .history-token-letter {
+        font-size: 0.7rem;
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .history-token-num {
+        font-size: 1.1rem;
+        font-weight: 800;
+        line-height: 1.1;
+        color: var(--ink);
+      }
+
+      /* Master Board (5 columns B-I-N-G-O, 15 numbers each) */
+      .master-board-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .board-top-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .board-title {
+        margin: 0;
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .board-sub {
+        font-size: 0.8125rem;
+        color: var(--ink-muted);
+      }
+
+      .master-columns {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        flex: 1;
+      }
+
+      .master-col {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .master-col-head {
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #ffffff;
+      }
+
+      .master-col-head span.range-hint {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 600;
+        opacity: 0.9;
+      }
+
+      .col-b-bg { background-color: var(--col-b); }
+      .col-i-bg { background-color: var(--col-i); }
+      .col-n-bg { background-color: var(--col-n); }
+      .col-g-bg { background-color: var(--col-g); }
+      .col-o-bg { background-color: var(--col-o); }
+
+      .col-b-text { color: var(--col-b); }
+      .col-i-text { color: var(--col-i); }
+      .col-n-text { color: var(--col-n); }
+      .col-g-text { color: var(--col-g); }
+      .col-o-text { color: var(--col-o); }
+
+      .master-cells {
+        display: grid;
+        grid-template-rows: repeat(15, 1fr);
+        gap: 4px;
+        flex: 1;
+      }
+
+      .master-cell {
+        min-height: 30px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.925rem;
+        font-weight: 700;
+        background: #f1f5f9;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+        transition:
+          transform 160ms var(--ease-snap),
+          background-color 160ms var(--ease-snap),
+          color 160ms var(--ease-snap);
+      }
+
+      .master-cell.drawn {
+        background: #0f4c3a;
+        color: #ffffff;
+        border-color: #093024;
+      }
+
+      .master-cell.latest {
+        background: var(--gold);
+        color: #1c1917;
+        border-color: var(--gold-dark);
+        transform: scale(1.04);
+        box-shadow: 0 3px 10px rgba(245, 158, 11, 0.45);
+      }
+
+      /* ==================== PLAYER MODE ==================== */
+      .player-layout {
+        flex: 1;
+        max-width: 1120px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 20px 24px 32px;
+        display: grid;
+        grid-template-columns: minmax(320px, 520px) minmax(260px, 1fr);
+        gap: 24px;
+        align-items: start;
+        justify-content: center;
+      }
+
+      .card-wrapper {
+        background: var(--paper);
+        color: var(--ink);
+        border-radius: var(--radius-card);
+        padding: 20px;
+        box-shadow: 0 20px 44px rgba(0, 0, 0, 0.34);
+      }
+
+      .victory-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+        color: #1c1917;
+        animation: bannerIn 220ms var(--ease-snap);
+      }
+
+      @keyframes bannerIn {
+        from {
+          transform: translateY(-6px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .victory-banner-title {
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1.1;
+        margin: 0;
+      }
+
+      .victory-banner-sub {
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin: 3px 0 0;
+      }
+
+      .card-header-row {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .card-col-letter {
+        height: 52px;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 1.65rem;
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .card-col-letter small {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.65rem;
+        font-weight: 600;
+        opacity: 0.9;
+        margin-top: 2px;
+      }
+
+      .bingo-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+      }
+
+      .bingo-cell {
+        position: relative;
+        aspect-ratio: 1 / 1;
+        min-height: 52px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        color: var(--ink);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: clamp(1.25rem, 2.8vw, 1.85rem);
+        font-weight: 800;
+        user-select: none;
+        transition:
+          transform 130ms var(--ease-snap),
+          background-color 140ms var(--ease-snap),
+          border-color 140ms var(--ease-snap),
+          color 140ms var(--ease-snap);
+      }
+
+      .bingo-cell:hover:not(.is-free) {
+        border-color: #94a3b8;
+        background: #f1f5f9;
+      }
+
+      .bingo-cell:active:not(.is-free) {
+        transform: scale(0.94);
+      }
+
+      .bingo-cell.marked {
+        background: #0f5132;
+        border-color: #093024;
+        color: #ffffff;
+      }
+
+      .bingo-cell.marked::after {
+        content: '✓';
+        position: absolute;
+        top: 5px;
+        right: 7px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--gold-bright);
+        line-height: 1;
+      }
+
+      .bingo-cell.is-free {
+        background: #fef3c7;
+        border-color: #f59e0b;
+        color: #92400e;
+        cursor: default;
+        font-size: 0.85rem;
+        gap: 2px;
+      }
+
+      .bingo-cell.winning-cell {
+        background: #d97706;
+        border-color: #78350f;
+        color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35);
+      }
+
+      .bingo-cell.winning-cell.marked::after {
+        color: #ffffff;
+      }
+
+      /* Verification Panel (Conferência) */
+      .verify-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .verify-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .verify-title {
+        margin: 0;
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .verify-count {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: var(--felt-mid);
+      }
+
+      .verify-help {
+        margin: 0;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: var(--ink-muted);
+      }
+
+      .marked-chips-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .marked-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 7px 11px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .marked-chip.is-win {
+        background: #fef3c7;
+        border-color: #f59e0b;
+        color: #78350f;
+      }
+
+      .marked-chip-col {
+        font-weight: 800;
+      }
+
+      /* Modals */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 18, 13, 0.72);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 80;
+      }
+
+      .modal-box {
+        width: 100%;
+        max-width: 420px;
+        background: var(--paper);
+        color: var(--ink);
+        border-radius: var(--radius-card);
+        padding: 24px;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+        animation: modalIn 180ms var(--ease-snap);
+      }
+
+      @keyframes modalIn {
+        from {
+          transform: scale(0.95);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .modal-title {
+        margin: 0 0 8px;
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+      }
+
+      .modal-body {
+        margin: 0 0 22px;
+        font-size: 0.9375rem;
+        line-height: 1.55;
+        color: var(--ink-muted);
+      }
+
+      .modal-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .btn-modal-cancel {
+        background: #f1f5f9;
+        color: var(--ink);
+        border: 1px solid #cbd5e1;
+      }
+
+      .btn-modal-cancel:hover {
+        background: #e2e8f0;
+      }
+
+      .btn-modal-confirm {
+        background: var(--crimson);
+        color: #ffffff;
+      }
+
+      .btn-modal-confirm:hover {
+        background: var(--crimson-dark);
+      }
+
+      /* QR Code & Share Modal */
+      .btn-qr-trigger {
+        background: #0f4c3a;
+        color: #ffffff;
+        border: 1px solid #093024;
+        padding: 9px 15px;
+      }
+
+      .btn-qr-trigger:hover {
+        background: #135a45;
+      }
+
+      .modal-box.qr-modal-box {
+        max-width: 680px;
+      }
+
+      .qr-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .qr-modal-header .modal-title {
+        margin: 0;
+      }
+
+      .btn-icon-close {
+        min-height: 40px;
+        min-width: 40px;
+        padding: 6px;
+        border-radius: 10px;
+        background: #f1f5f9;
+        color: var(--ink);
+        font-size: 1.1rem;
+        font-weight: 700;
+      }
+
+      .btn-icon-close:hover {
+        background: #e2e8f0;
+      }
+
+      .qr-modal-grid {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        gap: 22px;
+        align-items: start;
+      }
+
+      .qr-code-column {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .qr-frame {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background: #ffffff;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .qr-frame svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .qr-info-column {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .qr-room-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 0.875rem;
+        color: var(--ink-muted);
+      }
+
+      .qr-room-code {
+        font-weight: 800;
+        color: var(--ink);
+      }
+
+      .qr-field-label {
+        display: block;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 6px;
+      }
+
+      .qr-link-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .qr-input {
+        width: 100%;
+        min-height: 44px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: var(--ink);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+      }
+
+      .qr-input:focus {
+        outline: 2px solid var(--felt-mid);
+        border-color: var(--felt-mid);
+      }
+
+      .btn-copy {
+        background: var(--felt-mid);
+        color: #ffffff;
+      }
+
+      .btn-copy:hover {
+        background: var(--felt-surface);
+      }
+
+      .qr-local-note {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #fef3c7;
+        color: #78350f;
+        font-size: 0.8125rem;
+        line-height: 1.45;
+      }
+
+      .verify-share-row {
+        padding-top: 12px;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      /* Toast */
+      .toast-msg {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #0f172a;
+        color: #f8fafc;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+        z-index: 95;
+      }
+
+      /* Responsive Adjustments */
+      @media (max-width: 1024px) {
+        .home-hero {
+          grid-template-columns: 1fr;
+          gap: 28px;
+        }
+        .hero-artwork {
+          order: -1;
+          padding: 0;
+        }
+        .hero-svg-stage {
+          max-width: 300px;
+        }
+        .presenter-layout {
+          grid-template-columns: 1fr;
+        }
+        .player-layout {
+          grid-template-columns: 1fr;
+          justify-items: center;
+        }
+        .card-wrapper,
+        .verify-panel {
+          width: 100%;
+          max-width: 540px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .game-hud {
+          padding: 10px 14px;
+          flex-wrap: wrap;
+        }
+        .hud-right {
+          width: 100%;
+          justify-content: space-between;
+          gap: 8px;
+        }
+        .mode-grid {
+          grid-template-columns: 1fr;
+        }
+        .home-screen {
+          padding: 18px 16px;
+        }
+        .presenter-layout,
+        .player-layout {
+          padding: 14px 12px 24px;
+          gap: 16px;
+        }
+        .surface-panel,
+        .card-wrapper {
+          padding: 14px;
+        }
+        .master-columns {
+          gap: 5px;
+        }
+        .master-col-head {
+          height: 36px;
+          font-size: 1.1rem;
+        }
+        .master-col-head span.range-hint {
+          display: none;
+        }
+        .master-cell {
+          font-size: 0.8rem;
+          min-height: 28px;
+        }
+        .bingo-grid,
+        .card-header-row {
+          gap: 6px;
+        }
+        .bingo-cell {
+          min-height: 46px;
+          border-radius: 10px;
+        }
+        .btn {
+          padding: 8px 12px;
+          font-size: 0.8125rem;
+        }
+        .qr-modal-grid {
+          grid-template-columns: 1fr;
+        }
+        .qr-code-column {
+          max-width: 240px;
+          margin: 0 auto;
+        }
+        .qr-link-row {
+          flex-direction: column;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body><nav style="padding:10px 4vw;background:#211932"><a href="/" style="color:white;font:700 16px system-ui">‹ Central de Jogos</a></nav>
+    <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+    <div class="app-shell">
+      <!-- ==================== HOME / TITLE SCREEN ==================== -->
+      <main id="screen-home" class="home-screen">
+        <div class="home-topbar">
+          <div class="brand-mark">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+              <circle cx="16" cy="16" r="14" fill="#F59E0B" />
+              <circle cx="16" cy="16" r="10.5" fill="#FFFFFF" />
+              <text
+                x="16"
+                y="20.5"
+                text-anchor="middle"
+                font-family="Bricolage Grotesque, sans-serif"
+                font-weight="800"
+                font-size="13"
+                fill="#0F172A"
+              >
+                75
+              </text>
+            </svg>
+            <span>Bingo 75 Online</span>
+          </div>
+
+          <div class="session-status tabular-nums" id="home-session-indicator">
+            Sessão ativa • expira em 30 min
+          </div>
+        </div>
+
+        <section class="home-hero" aria-labelledby="hero-heading">
+          <div class="hero-copy">
+            <span class="hero-kicker">Edição Clássica B-I-N-G-O · 75 Bolas</span>
+            <h1 id="hero-heading" class="hero-title">Bingo tradicional pronto para sortear e jogar</h1>
+            <p class="hero-subtitle">
+              Escolha entre o globo de sorteio para projetar na sala ou a cartela interativa 5x5 para
+              acompanhar pelo celular. Seu progresso fica salvo automaticamente por 30 minutos.
+            </p>
+
+            <div class="mode-grid">
+              <button type="button" id="btn-enter-presenter" class="mode-card">
+                <span class="mode-card-icon presenter" aria-hidden="true">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9" />
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
+                  </svg>
+                </span>
+                <h2 class="mode-card-title">Modo Apresentador</h2>
+                <p class="mode-card-desc">
+                  Globo sorteador de 1 a 75 sem repetição, últimas 5 bolas, tabuleiro completo e som.
+                </p>
+                <span class="mode-card-cta">Abrir Globo →</span>
+              </button>
+
+              <button type="button" id="btn-enter-player" class="mode-card">
+                <span class="mode-card-icon player" aria-hidden="true">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="3" />
+                    <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
+                  </svg>
+                </span>
+                <h2 class="mode-card-title">Modo Jogador</h2>
+                <p class="mode-card-desc">
+                  Cartela única 5x5 com espaço FREE, marcação tátil e detecção automática de BINGO.
+                </p>
+                <span class="mode-card-cta">Abrir Cartela →</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="hero-artwork" aria-hidden="true">
+            <svg class="hero-svg-stage" viewBox="0 0 420 380" fill="none">
+              <!-- Tabletop soft shadow -->
+              <ellipse cx="210" cy="340" rx="165" ry="22" fill="rgba(0,0,0,0.38)" />
+              <!-- Brass Globe Stand -->
+              <path d="M125 322H295L278 292H142L125 322Z" fill="#B45309" />
+              <rect x="142" y="284" width="136" height="12" rx="6" fill="#F59E0B" />
+              <path
+                d="M110 185C110 248 154 290 210 290C266 290 310 248 310 185"
+                stroke="#F59E0B"
+                stroke-width="10"
+                stroke-linecap="round"
+              />
+              <!-- Glass Cage -->
+              <circle cx="210" cy="175" r="108" fill="rgba(255,255,255,0.08)" stroke="#FBBF24" stroke-width="6" />
+              <circle cx="210" cy="175" r="98" stroke="rgba(255,255,255,0.22)" stroke-width="2" stroke-dasharray="8 8" />
+              <!-- Inner Balls -->
+              <circle cx="164" cy="212" r="26" fill="#FFFFFF" stroke="#1D4ED8" stroke-width="5" />
+              <text x="164" y="218" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="16" fill="#0F172A">B12</text>
+
+              <circle cx="246" cy="218" r="26" fill="#FFFFFF" stroke="#059669" stroke-width="5" />
+              <text x="246" y="224" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="16" fill="#0F172A">G54</text>
+
+              <circle cx="182" cy="150" r="24" fill="#FFFFFF" stroke="#DC2626" stroke-width="5" />
+              <text x="182" y="156" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="15" fill="#0F172A">I27</text>
+
+              <circle cx="252" cy="158" r="24" fill="#FFFFFF" stroke="#6D28D9" stroke-width="5" />
+              <text x="252" y="164" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="15" fill="#0F172A">O71</text>
+
+              <!-- Featured Active Ball -->
+              <circle cx="210" cy="186" r="44" fill="#FFFFFF" stroke="#F59E0B" stroke-width="7" />
+              <text x="210" y="176" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="16" fill="#D97706">N</text>
+              <text x="210" y="206" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="30" fill="#0F172A">38</text>
+
+              <!-- Mini Bingo Card Accent -->
+              <g transform="translate(278 46) rotate(10)">
+                <rect x="0" y="0" width="96" height="106" rx="12" fill="#FFFFFF" />
+                <rect x="8" y="8" width="80" height="18" rx="5" fill="#0F4C3A" />
+                <text x="48" y="21" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="11" fill="#FFFFFF">B I N G O</text>
+                <rect x="10" y="34" width="22" height="20" rx="4" fill="#F1F5F9" />
+                <rect x="37" y="34" width="22" height="20" rx="4" fill="#0F5132" />
+                <rect x="64" y="34" width="22" height="20" rx="4" fill="#F1F5F9" />
+                <rect x="10" y="59" width="22" height="20" rx="4" fill="#0F5132" />
+                <rect x="37" y="59" width="22" height="20" rx="4" fill="#FEF3C7" />
+                <rect x="64" y="59" width="22" height="20" rx="4" fill="#F1F5F9" />
+                <rect x="10" y="84" width="22" height="14" rx="4" fill="#F1F5F9" />
+                <rect x="37" y="84" width="22" height="14" rx="4" fill="#0F5132" />
+                <rect x="64" y="84" width="22" height="14" rx="4" fill="#F1F5F9" />
+              </g>
+            </svg>
+          </div>
+        </section>
+
+        <div class="control-hint-bar">
+          <span>Espaço Sortear bola (Apresentador) · Clique Marcar número (Jogador) · M Silenciar som</span>
+          <span>Persistência local de 30 minutos no navegador</span>
+        </div>
+      </main>
+
+      <!-- ==================== PRESENTER SCREEN ==================== -->
+      <section id="screen-presenter" class="hidden" style="flex: 1; display: flex; flex-direction: column;">
+        <header class="game-hud">
+          <div class="hud-left">
+            <button type="button" class="btn btn-ghost js-back-home" aria-label="Voltar para seleção de modos">
+              ← Modos
+            </button>
+            <span class="hud-title">Bingo 75 · Apresentador</span>
+          </div>
+
+          <div class="hud-right">
+            <span class="session-status tabular-nums js-session-indicator">
+              Sessão ativa • expira em 30 min
+            </span>
+            <button type="button" class="btn btn-ghost js-mute-toggle" aria-pressed="false">
+              Som: Ligado
+            </button>
+            <button type="button" id="btn-open-reset-modal" class="btn btn-danger-outline">
+              Reiniciar Jogo
+            </button>
+          </div>
+        </header>
+
+        <div class="presenter-layout">
+          <!-- Left: Globe & Controls -->
+          <div class="surface-panel presenter-stage">
+            <div class="stage-header">
+              <span class="stage-label">Bola Atual</span>
+              <span id="presenter-counter" class="ball-counter tabular-nums">0 / 75 sorteadas</span>
+            </div>
+
+            <div class="globe-arena">
+              <div id="spinning-globe-wrap" class="spinning-globe-wrap hidden" aria-hidden="true">
+                <svg class="spinning-globe-svg" viewBox="0 0 160 160" fill="none">
+                  <!-- Stand -->
+                  <path d="M46 146H114L104 132H56L46 146Z" fill="#B45309" />
+                  <rect x="54" y="128" width="52" height="6" rx="3" fill="#F59E0B" />
+                  <path
+                    d="M32 76C32 108 53 130 80 130C107 130 128 108 128 76"
+                    stroke="#F59E0B"
+                    stroke-width="5"
+                    stroke-linecap="round"
+                  />
+                  <!-- Rotating Cage -->
+                  <g class="globe-cage-rotor">
+                    <circle cx="80" cy="72" r="46" fill="rgba(255,255,255,0.1)" stroke="#FBBF24" stroke-width="4" />
+                    <ellipse cx="80" cy="72" rx="46" ry="18" stroke="rgba(251,191,36,0.65)" stroke-width="2" />
+                    <ellipse cx="80" cy="72" rx="18" ry="46" stroke="rgba(251,191,36,0.65)" stroke-width="2" />
+                    <line x1="34" y1="72" x2="126" y2="72" stroke="rgba(255,255,255,0.28)" stroke-width="1.5" />
+                    <line x1="80" y1="26" x2="80" y2="118" stroke="rgba(255,255,255,0.28)" stroke-width="1.5" />
+                    <g class="globe-inner-balls">
+                      <circle cx="62" cy="60" r="11" fill="#FFFFFF" stroke="#1D4ED8" stroke-width="3.5" />
+                      <circle cx="96" cy="58" r="11" fill="#FFFFFF" stroke="#DC2626" stroke-width="3.5" />
+                      <circle cx="80" cy="78" r="12" fill="#FFFFFF" stroke="#D97706" stroke-width="3.5" />
+                      <circle cx="60" cy="88" r="10.5" fill="#FFFFFF" stroke="#059669" stroke-width="3.5" />
+                      <circle cx="98" cy="86" r="10.5" fill="#FFFFFF" stroke="#6D28D9" stroke-width="3.5" />
+                    </g>
+                  </g>
+                </svg>
+              </div>
+              <div id="current-ball-orb" class="drawn-ball-orb idle" aria-live="polite">
+                <span id="orb-letter" class="orb-letter">—</span>
+                <span id="orb-number" class="orb-number tabular-nums">--</span>
+              </div>
+              <div id="orb-caption" class="orb-caption tabular-nums">Pronto para iniciar o sorteio</div>
+            </div>
+
+            <button type="button" id="btn-draw-ball" class="btn btn-primary btn-draw-xl">
+              Sortear Número
+            </button>
+
+            <div class="history-section">
+              <div class="history-header">
+                <span>Últimas 5 sorteadas</span>
+                <span id="presenter-remaining" class="tabular-nums">75 restantes</span>
+              </div>
+              <div id="history-strip" class="history-strip" aria-label="Histórico das últimas 5 bolas"></div>
+            </div>
+          </div>
+
+          <!-- Right: Full 1-75 Master Board -->
+          <div class="surface-panel master-board-panel">
+            <div class="board-top-meta">
+              <div>
+                <h2 class="board-title">Tabuleiro Geral (1 a 75)</h2>
+                <span class="board-sub">Conferência em tempo real nas colunas B-I-N-G-O</span>
+              </div>
+              <button type="button" id="btn-open-qr-modal" class="btn btn-qr-trigger">
+                QR Code / Link Cartelas
+              </button>
+            </div>
+            <div id="master-board" class="master-columns" role="region" aria-label="Tabuleiro de números sorteados"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== PLAYER SCREEN ==================== -->
+      <section id="screen-player" class="hidden" style="flex: 1; display: flex; flex-direction: column;">
+        <header class="game-hud">
+          <div class="hud-left">
+            <button type="button" class="btn btn-ghost js-back-home" aria-label="Voltar para seleção de modos">
+              ← Modos
+            </button>
+            <span class="hud-title">Bingo 75 · Cartela 5x5</span>
+          </div>
+
+          <div class="hud-right">
+            <span class="session-status tabular-nums js-session-indicator">
+              Sessão ativa • expira em 30 min
+            </span>
+            <button type="button" class="btn btn-ghost js-mute-toggle" aria-pressed="false">
+              Som: Ligado
+            </button>
+            <button type="button" id="btn-open-newcard-modal" class="btn btn-ghost">
+              Gerar Nova Cartela
+            </button>
+          </div>
+        </header>
+
+        <div class="player-layout">
+          <!-- Interactive 5x5 Bingo Card -->
+          <div class="card-wrapper">
+            <div id="victory-banner" class="victory-banner hidden" role="status" aria-live="assertive">
+              <div>
+                <h2 class="victory-banner-title">BINGO!</h2>
+                <p id="victory-pattern-text" class="victory-banner-sub">Cartela vencedora completada!</p>
+              </div>
+              <button type="button" id="btn-replay-confetti" class="btn btn-ghost" style="background: rgba(28,25,23,0.12); color: #1c1917; border-color: rgba(28,25,23,0.2);">
+                Celebrar
+              </button>
+            </div>
+
+            <div class="card-header-row" aria-hidden="true">
+              <div class="card-col-letter col-b-bg">B<small>1–15</small></div>
+              <div class="card-col-letter col-i-bg">I<small>16–30</small></div>
+              <div class="card-col-letter col-n-bg">N<small>31–45</small></div>
+              <div class="card-col-letter col-g-bg">G<small>46–60</small></div>
+              <div class="card-col-letter col-o-bg">O<small>61–75</small></div>
+            </div>
+
+            <div id="player-card-grid" class="bingo-grid" role="grid" aria-label="Cartela de Bingo 5 por 5"></div>
+          </div>
+
+          <!-- Verification Panel -->
+          <aside class="surface-panel verify-panel" aria-label="Conferência dos números marcados">
+            <div class="verify-head">
+              <h3 class="verify-title">Números Marcados</h3>
+              <span id="player-marked-count" class="verify-count tabular-nums">1 / 25</span>
+            </div>
+            <p id="verify-help-text" class="verify-help">
+              Toque nos números da cartela conforme forem sorteados. Ao completar uma linha, coluna ou
+              diagonal, a vitória será detectada automaticamente.
+            </p>
+            <div id="marked-chips-list" class="marked-chips-grid"></div>
+            <div class="verify-share-row">
+              <button type="button" id="btn-copy-card-link" class="btn btn-modal-cancel" style="width: 100%;">
+                Copiar Link desta Cartela
+              </button>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== QR CODE / SHARE MODAL ==================== -->
+    <div id="qr-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
+      <div class="modal-box qr-modal-box">
+        <div class="qr-modal-header">
+          <h3 id="qr-modal-title" class="modal-title">Cartelas Online para Jogadores</h3>
+          <button type="button" id="btn-close-qr-modal" class="btn btn-icon-close" aria-label="Fechar janela de QR Code">
+            ✕
+          </button>
+        </div>
+
+        <div class="qr-modal-grid">
+          <div class="qr-code-column">
+            <div id="qr-svg-container" class="qr-frame" aria-label="QR Code para abrir cartela no celular"></div>
+            <button type="button" id="btn-download-qr" class="btn btn-modal-cancel" style="width: 100%;">
+              Baixar QR Code (PNG)
+            </button>
+          </div>
+
+          <div class="qr-info-column">
+            <p class="modal-body" style="margin: 0;">
+              Peça aos jogadores para apontarem a câmera do celular para o QR Code ou envie o link
+              abaixo. Cada aparelho abre direto no Modo Jogador com uma cartela 5x5 única.
+            </p>
+
+            <div class="qr-room-row">
+              <span>Sala atual: <span id="qr-room-label" class="qr-room-code tabular-nums">B75-0000</span></span>
+              <button type="button" id="btn-rotate-room" class="btn btn-modal-cancel" style="min-height: 36px; padding: 6px 12px; font-size: 0.8rem;">
+                Nova Sala
+              </button>
+            </div>
+
+            <div>
+              <label for="qr-share-url" class="qr-field-label">Link direto da cartela</label>
+              <div class="qr-link-row">
+                <input id="qr-share-url" class="qr-input" type="text" readonly />
+                <button type="button" id="btn-copy-share-url" class="btn btn-copy">Copiar Link</button>
+              </div>
+            </div>
+
+            <div>
+              <label for="qr-base-url" class="qr-field-label">Endereço base (ajuste se estiver em outro domínio)</label>
+              <input id="qr-base-url" class="qr-input" type="url" placeholder="https://seu-site.com/bingo.html" />
+            </div>
+
+            <div id="qr-local-warning" class="qr-local-note hidden">
+              Você está acessando localmente. Para que celulares externos abram o link pelo QR Code,
+              publique este arquivo online ou informe o endereço de rede/público acima.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== CONFIRMATION MODAL ==================== -->
+    <div id="confirm-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-box">
+        <h3 id="modal-title" class="modal-title">Confirmar ação</h3>
+        <p id="modal-desc" class="modal-body"></p>
+        <div class="modal-actions">
+          <button type="button" id="btn-modal-cancel" class="btn btn-modal-cancel">Cancelar</button>
+          <button type="button" id="btn-modal-confirm" class="btn btn-modal-confirm">Confirmar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast-msg hidden" role="status" aria-live="polite"></div>
+
+    <script>
+      (function () {
+        'use strict';
+
+        const STORAGE_KEY = 'bingo75_session_v1';
+        const SESSION_TTL_MS = 30 * 60 * 1000;
+
+        const COLUMNS = [
+          { letter: 'B', min: 1, max: 15, colorClass: 'col-b-bg', textClass: 'col-b-text', hex: '#1d4ed8' },
+          { letter: 'I', min: 16, max: 30, colorClass: 'col-i-bg', textClass: 'col-i-text', hex: '#dc2626' },
+          { letter: 'N', min: 31, max: 45, colorClass: 'col-n-bg', textClass: 'col-n-text', hex: '#d97706' },
+          { letter: 'G', min: 46, max: 60, colorClass: 'col-g-bg', textClass: 'col-g-text', hex: '#059669' },
+          { letter: 'O', min: 61, max: 75, colorClass: 'col-o-bg', textClass: 'col-o-text', hex: '#6d28d9' },
+        ];
+
+        function getColumnForNumber(num) {
+          if (num >= 1 && num <= 15) return COLUMNS[0];
+          if (num >= 16 && num <= 30) return COLUMNS[1];
+          if (num >= 31 && num <= 45) return COLUMNS[2];
+          if (num >= 46 && num <= 60) return COLUMNS[3];
+          return COLUMNS[4];
+        }
+
+        function pad2(n) {
+          return String(n).padStart(2, '0');
+        }
+
+        function shuffleSample(min, max, count) {
+          const pool = [];
+          for (let i = min; i <= max; i++) pool.push(i);
+          for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const tmp = pool[i];
+            pool[i] = pool[j];
+            pool[j] = tmp;
+          }
+          return pool.slice(0, count);
+        }
+
+        function createNewCard() {
+          const cols = COLUMNS.map((c, idx) =>
+            idx === 2 ? shuffleSample(c.min, c.max, 4) : shuffleSample(c.min, c.max, 5)
+          );
+          const card = [];
+          const marked = [];
+          for (let r = 0; r < 5; r++) {
+            const row = [];
+            const markRow = [];
+            for (let c = 0; c < 5; c++) {
+              if (r === 2 && c === 2) {
+                row.push('FREE');
+                markRow.push(true);
+              } else if (c === 2) {
+                const nIdx = r > 2 ? r - 1 : r;
+                row.push(cols[c][nIdx]);
+                markRow.push(false);
+              } else {
+                row.push(cols[c][r]);
+                markRow.push(false);
+              }
+            }
+            card.push(row);
+            marked.push(markRow);
+          }
+          return { card, marked, celebratedWinKey: null };
+        }
+
+        function generateRoomCode() {
+          const digits = Math.floor(1000 + Math.random() * 9000);
+          return 'B75-' + digits;
+        }
+
+        function encodeCardParam(card) {
+          const nums = [];
+          for (let r = 0; r < 5; r++) {
+            for (let c = 0; c < 5; c++) {
+              if (!(r === 2 && c === 2)) nums.push(card[r][c]);
+            }
+          }
+          return nums.join(',');
+        }
+
+        function decodeCardParam(param) {
+          if (!param) return null;
+          const parts = param.split(',').map((s) => Number(s.trim()));
+          if (parts.length !== 24 || parts.some((n) => !Number.isInteger(n))) return null;
+          const card = [];
+          const marked = [];
+          const colSets = [new Set(), new Set(), new Set(), new Set(), new Set()];
+          let idx = 0;
+          for (let r = 0; r < 5; r++) {
+            const row = [];
+            const markRow = [];
+            for (let c = 0; c < 5; c++) {
+              if (r === 2 && c === 2) {
+                row.push('FREE');
+                markRow.push(true);
+              } else {
+                const n = parts[idx++];
+                const col = COLUMNS[c];
+                if (n < col.min || n > col.max || colSets[c].has(n)) return null;
+                colSets[c].add(n);
+                row.push(n);
+                markRow.push(false);
+              }
+            }
+            card.push(row);
+            marked.push(markRow);
+          }
+          return { card, marked, celebratedWinKey: null };
+        }
+
+        function createFreshState(mode, roomCodeOverride, cardOverride) {
+          return {
+            expiresAt: Date.now() + SESSION_TTL_MS,
+            mode: mode || 'home',
+            roomCode: roomCodeOverride || generateRoomCode(),
+            muted: false,
+            presenter: {
+              drawn: [],
+            },
+            player: cardOverride || createNewCard(),
+          };
+        }
+
+        function isValidStateShape(obj) {
+          if (!obj || typeof obj !== 'object') return false;
+          if (typeof obj.expiresAt !== 'number') return false;
+          if (!['home', 'presenter', 'player'].includes(obj.mode)) return false;
+          if (!obj.presenter || !Array.isArray(obj.presenter.drawn)) return false;
+          if (
+            !obj.player ||
+            !Array.isArray(obj.player.card) ||
+            obj.player.card.length !== 5 ||
+            !Array.isArray(obj.player.marked) ||
+            obj.player.marked.length !== 5
+          ) {
+            return false;
+          }
+          return true;
+        }
+
+        function loadState() {
+          const params = new URLSearchParams(window.location.search);
+          const urlModo = (params.get('modo') || params.get('mode') || '').toLowerCase();
+          const urlRoom = (params.get('sala') || '').trim();
+          const urlCard = decodeCardParam(params.get('c'));
+          const wantsPlayerLink = urlModo === 'jogador' || urlModo === 'player';
+
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) {
+              const fresh = createFreshState(
+                wantsPlayerLink ? 'player' : 'home',
+                urlRoom || undefined,
+                urlCard || undefined
+              );
+              saveState(fresh);
+              return fresh;
+            }
+            const parsed = JSON.parse(raw);
+            if (!isValidStateShape(parsed) || Date.now() >= parsed.expiresAt) {
+              localStorage.removeItem(STORAGE_KEY);
+              const fresh = createFreshState(
+                wantsPlayerLink ? 'player' : 'home',
+                urlRoom || undefined,
+                urlCard || undefined
+              );
+              saveState(fresh);
+              return fresh;
+            }
+            if (!parsed.roomCode) parsed.roomCode = generateRoomCode();
+            parsed.player.marked[2][2] = true;
+
+            if (wantsPlayerLink) {
+              parsed.mode = 'player';
+              if (urlCard) {
+                const sameCard = encodeCardParam(parsed.player.card) === encodeCardParam(urlCard.card);
+                if (!sameCard) {
+                  parsed.player = urlCard;
+                }
+              } else if (urlRoom && urlRoom !== parsed.roomCode) {
+                parsed.roomCode = urlRoom;
+                parsed.player = createNewCard();
+                parsed.expiresAt = Date.now() + SESSION_TTL_MS;
+              }
+              if (urlRoom) parsed.roomCode = urlRoom;
+              saveState(parsed);
+            }
+            return parsed;
+          } catch (e) {
+            localStorage.removeItem(STORAGE_KEY);
+            const fresh = createFreshState(
+              wantsPlayerLink ? 'player' : 'home',
+              urlRoom || undefined,
+              urlCard || undefined
+            );
+            saveState(fresh);
+            return fresh;
+          }
+        }
+
+        function saveState(nextState) {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+          } catch (e) {
+            // Ignore storage quota errors cleanly
+          }
+        }
+
+        /* ==================== WEB AUDIO API SYNTH ==================== */
+        let audioCtx = null;
+
+        function ensureAudio() {
+          if (state.muted) return null;
+          if (!audioCtx) {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (Ctx) audioCtx = new Ctx();
+          }
+          if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(function () {});
+          }
+          return audioCtx;
+        }
+
+        function playGlobeTickSound(step) {
+          const ctx = ensureAudio();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          const freq = 260 + (step % 5) * 45;
+          osc.frequency.setValueAtTime(freq, now);
+          osc.frequency.exponentialRampToValueAtTime(freq * 0.72, now + 0.035);
+          gain.gain.setValueAtTime(0.055, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.045);
+        }
+
+        function playDrawSound() {
+          const ctx = ensureAudio();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+
+          // Short globe rattle + crisp bell chime
+          const notes = [523.25, 659.25, 783.99];
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = idx === 2 ? 'triangle' : 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.055);
+            gain.gain.setValueAtTime(0.001, now + idx * 0.055);
+            gain.gain.exponentialRampToValueAtTime(0.14, now + idx * 0.055 + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.055 + 0.24);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.055);
+            osc.stop(now + idx * 0.055 + 0.25);
+          });
+        }
+
+        function playMarkSound(isMarking) {
+          const ctx = ensureAudio();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(isMarking ? 580 : 340, now);
+          osc.frequency.exponentialRampToValueAtTime(isMarking ? 760 : 240, now + 0.07);
+          gain.gain.setValueAtTime(0.09, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        }
+
+        function playBingoFanfare() {
+          const ctx = ensureAudio();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          const fanfare = [523.25, 659.25, 783.99, 1046.5];
+          fanfare.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            const t = now + i * 0.09;
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(0.001, t);
+            gain.gain.exponentialRampToValueAtTime(0.18, t + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.56);
+          });
+        }
+
+        /* ==================== CONFETTI ENGINE (CANVAS) ==================== */
+        const confettiCanvas = document.getElementById('confetti-canvas');
+        const confettiCtx = confettiCanvas.getContext('2d');
+        let confettiParticles = [];
+        let confettiFrameId = null;
+
+        function resizeConfettiCanvas() {
+          confettiCanvas.width = window.innerWidth;
+          confettiCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeConfettiCanvas);
+        resizeConfettiCanvas();
+
+        function launchConfetti() {
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+          const colors = ['#f59e0b', '#fbbf24', '#10b981', '#e11d48', '#2563eb', '#ffffff'];
+          const w = confettiCanvas.width;
+          const h = confettiCanvas.height;
+          for (let i = 0; i < 130; i++) {
+            confettiParticles.push({
+              x: w * (0.2 + Math.random() * 0.6),
+              y: h * 0.35 + (Math.random() * 60 - 30),
+              vx: (Math.random() - 0.5) * 14,
+              vy: -(Math.random() * 11 + 4),
+              size: Math.random() * 7 + 5,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              rot: Math.random() * Math.PI * 2,
+              vRot: (Math.random() - 0.5) * 0.25,
+              life: 1,
+            });
+          }
+          if (!confettiFrameId) {
+            animateConfetti();
+          }
+        }
+
+        function animateConfetti() {
+          confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+          const next = [];
+          for (let i = 0; i < confettiParticles.length; i++) {
+            const p = confettiParticles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.32;
+            p.vx *= 0.99;
+            p.rot += p.vRot;
+            p.life -= 0.0085;
+            if (p.life > 0 && p.y < confettiCanvas.height + 30) {
+              next.push(p);
+              confettiCtx.save();
+              confettiCtx.globalAlpha = Math.min(1, p.life * 1.4);
+              confettiCtx.translate(p.x, p.y);
+              confettiCtx.rotate(p.rot);
+              confettiCtx.fillStyle = p.color;
+              confettiCtx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * 0.65);
+              confettiCtx.restore();
+            }
+          }
+          confettiParticles = next;
+          if (confettiParticles.length > 0) {
+            confettiFrameId = requestAnimationFrame(animateConfetti);
+          } else {
+            confettiFrameId = null;
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+          }
+        }
+
+        /* ==================== STATE & DOM REFS ==================== */
+        let state = loadState();
+        let pendingConfirmAction = null;
+        let toastTimer = null;
+        let isDrawing = false;
+        let drawSpinTimer = null;
+        let drawTickInterval = null;
+        let drawCountdownInterval = null;
+
+        const screenHome = document.getElementById('screen-home');
+        const screenPresenter = document.getElementById('screen-presenter');
+        const screenPlayer = document.getElementById('screen-player');
+
+        const homeSessionIndicator = document.getElementById('home-session-indicator');
+        const sessionIndicators = document.querySelectorAll('.js-session-indicator');
+        const muteButtons = document.querySelectorAll('.js-mute-toggle');
+
+        // Presenter DOM
+        const presenterCounter = document.getElementById('presenter-counter');
+        const presenterRemaining = document.getElementById('presenter-remaining');
+        const spinningGlobeWrap = document.getElementById('spinning-globe-wrap');
+        const currentBallOrb = document.getElementById('current-ball-orb');
+        const orbLetter = document.getElementById('orb-letter');
+        const orbNumber = document.getElementById('orb-number');
+        const orbCaption = document.getElementById('orb-caption');
+        const btnDrawBall = document.getElementById('btn-draw-ball');
+        const historyStrip = document.getElementById('history-strip');
+        const masterBoard = document.getElementById('master-board');
+
+        // Player DOM
+        const playerCardGrid = document.getElementById('player-card-grid');
+        const victoryBanner = document.getElementById('victory-banner');
+        const victoryPatternText = document.getElementById('victory-pattern-text');
+        const playerMarkedCount = document.getElementById('player-marked-count');
+        const verifyHelpText = document.getElementById('verify-help-text');
+        const markedChipsList = document.getElementById('marked-chips-list');
+
+        // QR Modal DOM
+        const qrModal = document.getElementById('qr-modal');
+        const qrSvgContainer = document.getElementById('qr-svg-container');
+        const qrRoomLabel = document.getElementById('qr-room-label');
+        const qrShareUrlInput = document.getElementById('qr-share-url');
+        const qrBaseUrlInput = document.getElementById('qr-base-url');
+        const qrLocalWarning = document.getElementById('qr-local-warning');
+
+        // Modal DOM
+        const confirmModal = document.getElementById('confirm-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDesc = document.getElementById('modal-desc');
+        const btnModalCancel = document.getElementById('btn-modal-cancel');
+        const btnModalConfirm = document.getElementById('btn-modal-confirm');
+        const toastEl = document.getElementById('toast');
+
+        /* ==================== OFFLINE QR CODE GENERATOR (ISO 18004, EC-M) ==================== */
+        const QR_VERSIONS_M = [
+          null,
+          { total: 26, ecPerBlk: 10, g1Blks: 1, g1Data: 16, g2Blks: 0, g2Data: 0, align: [] },
+          { total: 44, ecPerBlk: 16, g1Blks: 1, g1Data: 28, g2Blks: 0, g2Data: 0, align: [6, 18] },
+          { total: 70, ecPerBlk: 26, g1Blks: 1, g1Data: 44, g2Blks: 0, g2Data: 0, align: [6, 22] },
+          { total: 100, ecPerBlk: 18, g1Blks: 2, g1Data: 32, g2Blks: 0, g2Data: 0, align: [6, 26] },
+          { total: 134, ecPerBlk: 24, g1Blks: 2, g1Data: 43, g2Blks: 0, g2Data: 0, align: [6, 30] },
+          { total: 172, ecPerBlk: 16, g1Blks: 4, g1Data: 27, g2Blks: 0, g2Data: 0, align: [6, 34] },
+          { total: 196, ecPerBlk: 18, g1Blks: 4, g1Data: 31, g2Blks: 0, g2Data: 0, align: [6, 22, 38] },
+          { total: 242, ecPerBlk: 22, g1Blks: 2, g1Data: 38, g2Blks: 2, g2Data: 39, align: [6, 24, 42] },
+          { total: 292, ecPerBlk: 22, g1Blks: 3, g1Data: 36, g2Blks: 2, g2Data: 37, align: [6, 26, 46] },
+          { total: 346, ecPerBlk: 26, g1Blks: 4, g1Data: 43, g2Blks: 1, g2Data: 44, align: [6, 28, 50] },
+          { total: 404, ecPerBlk: 30, g1Blks: 1, g1Data: 50, g2Blks: 4, g2Data: 51, align: [6, 30, 54] },
+          { total: 466, ecPerBlk: 22, g1Blks: 6, g1Data: 36, g2Blks: 2, g2Data: 37, align: [6, 32, 58] },
+        ];
+
+        const GF_EXP = new Uint8Array(512);
+        const GF_LOG = new Uint8Array(256);
+        (function initGaloisField() {
+          let x = 1;
+          for (let i = 0; i < 255; i++) {
+            GF_EXP[i] = x;
+            GF_LOG[x] = i;
+            x <<= 1;
+            if (x & 0x100) x ^= 0x11d;
+          }
+          for (let i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255];
+        })();
+
+        function gfMul(a, b) {
+          return a === 0 || b === 0 ? 0 : GF_EXP[GF_LOG[a] + GF_LOG[b]];
+        }
+
+        function rsRemainder(data, ecLen) {
+          let poly = [1];
+          for (let i = 0; i < ecLen; i++) {
+            const next = new Array(poly.length + 1).fill(0);
+            const root = GF_EXP[i];
+            for (let j = 0; j < poly.length; j++) {
+              next[j] ^= poly[j];
+              next[j + 1] ^= gfMul(poly[j], root);
+            }
+            poly = next;
+          }
+          const res = new Uint8Array(ecLen);
+          for (let i = 0; i < data.length; i++) {
+            const factor = data[i] ^ res[0];
+            res.copyWithin(0, 1);
+            res[ecLen - 1] = 0;
+            if (factor !== 0) {
+              for (let j = 0; j < ecLen; j++) res[j] ^= gfMul(poly[j + 1], factor);
+            }
+          }
+          return res;
+        }
+
+        function generateQRMatrix(text) {
+          const bytes = new TextEncoder().encode(text);
+          let ver = 0;
+          for (let v = 1; v < QR_VERSIONS_M.length; v++) {
+            const info = QR_VERSIONS_M[v];
+            const dataCap = info.g1Blks * info.g1Data + info.g2Blks * info.g2Data;
+            const countBits = v <= 9 ? 8 : 16;
+            if (4 + countBits + bytes.length * 8 <= dataCap * 8) {
+              ver = v;
+              break;
+            }
+          }
+          if (!ver) return null;
+
+          const info = QR_VERSIONS_M[ver];
+          const dataCap = info.g1Blks * info.g1Data + info.g2Blks * info.g2Data;
+          const countBits = ver <= 9 ? 8 : 16;
+
+          const bits = [];
+          function pushBits(val, len) {
+            for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
+          }
+          pushBits(4, 4);
+          pushBits(bytes.length, countBits);
+          for (let i = 0; i < bytes.length; i++) pushBits(bytes[i], 8);
+          const maxBits = dataCap * 8;
+          const term = Math.min(4, maxBits - bits.length);
+          for (let i = 0; i < term; i++) bits.push(0);
+          while (bits.length % 8 !== 0) bits.push(0);
+
+          const dataBytes = [];
+          for (let i = 0; i < bits.length; i += 8) {
+            let b = 0;
+            for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
+            dataBytes.push(b);
+          }
+          const padBytes = [0xec, 0x11];
+          let padIdx = 0;
+          while (dataBytes.length < dataCap) {
+            dataBytes.push(padBytes[padIdx]);
+            padIdx ^= 1;
+          }
+
+          const blocks = [];
+          const ecBlocks = [];
+          let offset = 0;
+          for (let i = 0; i < info.g1Blks; i++) {
+            const blk = dataBytes.slice(offset, offset + info.g1Data);
+            offset += info.g1Data;
+            blocks.push(blk);
+            ecBlocks.push(rsRemainder(blk, info.ecPerBlk));
+          }
+          for (let i = 0; i < info.g2Blks; i++) {
+            const blk = dataBytes.slice(offset, offset + info.g2Data);
+            offset += info.g2Data;
+            blocks.push(blk);
+            ecBlocks.push(rsRemainder(blk, info.ecPerBlk));
+          }
+
+          const codewords = [];
+          const maxDataLen = Math.max(info.g1Data, info.g2Data);
+          for (let i = 0; i < maxDataLen; i++) {
+            for (let b = 0; b < blocks.length; b++) {
+              if (i < blocks[b].length) codewords.push(blocks[b][i]);
+            }
+          }
+          for (let i = 0; i < info.ecPerBlk; i++) {
+            for (let b = 0; b < ecBlocks.length; b++) codewords.push(ecBlocks[b][i]);
+          }
+
+          const size = ver * 4 + 17;
+          const modules = Array.from({ length: size }, () => new Uint8Array(size));
+          const isFunc = Array.from({ length: size }, () => new Uint8Array(size));
+
+          function setFunc(r, c, dark) {
+            if (r >= 0 && r < size && c >= 0 && c < size) {
+              modules[r][c] = dark ? 1 : 0;
+              isFunc[r][c] = 1;
+            }
+          }
+
+          function drawFinder(top, left) {
+            for (let dr = -1; dr <= 7; dr++) {
+              for (let dc = -1; dc <= 7; dc++) {
+                const r = top + dr;
+                const c = left + dc;
+                if (r < 0 || r >= size || c < 0 || c >= size) continue;
+                const dist = Math.max(Math.abs(dr - 3), Math.abs(dc - 3));
+                setFunc(r, c, dist !== 2 && dist !== 4);
+              }
+            }
+          }
+
+          drawFinder(0, 0);
+          drawFinder(0, size - 7);
+          drawFinder(size - 7, 0);
+
+          for (let i = 8; i < size - 8; i++) {
+            const dark = i % 2 === 0;
+            if (!isFunc[6][i]) setFunc(6, i, dark);
+            if (!isFunc[i][6]) setFunc(i, 6, dark);
+          }
+
+          const alignPos = info.align;
+          for (let i = 0; i < alignPos.length; i++) {
+            for (let j = 0; j < alignPos.length; j++) {
+              const r = alignPos[i];
+              const c = alignPos[j];
+              if (
+                (i === 0 && j === 0) ||
+                (i === 0 && j === alignPos.length - 1) ||
+                (i === alignPos.length - 1 && j === 0)
+              ) {
+                continue;
+              }
+              for (let dr = -2; dr <= 2; dr++) {
+                for (let dc = -2; dc <= 2; dc++) {
+                  const dist = Math.max(Math.abs(dr), Math.abs(dc));
+                  setFunc(r + dr, c + dc, dist !== 1);
+                }
+              }
+            }
+          }
+
+          setFunc(size - 8, 8, true);
+
+          for (let i = 0; i <= 8; i++) {
+            if (i !== 6) {
+              isFunc[8][i] = 1;
+              isFunc[i][8] = 1;
+            }
+          }
+          for (let i = 0; i < 8; i++) {
+            isFunc[8][size - 1 - i] = 1;
+            if (i < 7) isFunc[size - 1 - i][8] = 1;
+          }
+
+          if (ver >= 7) {
+            let rem = ver << 12;
+            for (let i = 5; i >= 0; i--) {
+              if ((rem >> (i + 12)) & 1) rem ^= 0x1f25 << i;
+            }
+            const vBits = (ver << 12) | rem;
+            for (let i = 0; i < 18; i++) {
+              const dark = ((vBits >> i) & 1) === 1;
+              const a = size - 11 + (i % 3);
+              const b = Math.floor(i / 3);
+              setFunc(a, b, dark);
+              setFunc(b, a, dark);
+            }
+          }
+
+          const allBits = [];
+          for (let i = 0; i < codewords.length; i++) {
+            for (let b = 7; b >= 0; b--) allBits.push((codewords[i] >> b) & 1);
+          }
+          let bitIdx = 0;
+          for (let right = size - 1; right >= 1; right -= 2) {
+            if (right === 6) right = 5;
+            for (let vert = 0; vert < size; vert++) {
+              for (let j = 0; j < 2; j++) {
+                const c = right - j;
+                const upward = ((right + 1) & 2) === 0;
+                const r = upward ? size - 1 - vert : vert;
+                if (!isFunc[r][c] && bitIdx < allBits.length) {
+                  modules[r][c] = allBits[bitIdx++];
+                }
+              }
+            }
+          }
+
+          function applyFormat(mat, mask) {
+            const data = (0 << 3) | mask;
+            let rem = data << 10;
+            for (let i = 4; i >= 0; i--) {
+              if ((rem >> (i + 10)) & 1) rem ^= 0x537 << i;
+            }
+            const fBits = ((data << 10) | rem) ^ 0x5412;
+            for (let i = 0; i <= 5; i++) mat[i][8] = (fBits >> i) & 1;
+            mat[7][8] = (fBits >> 6) & 1;
+            mat[8][8] = (fBits >> 7) & 1;
+            mat[8][7] = (fBits >> 8) & 1;
+            for (let i = 9; i <= 14; i++) mat[8][14 - i] = (fBits >> i) & 1;
+            for (let i = 0; i < 8; i++) mat[8][size - 1 - i] = (fBits >> i) & 1;
+            for (let i = 8; i < 15; i++) mat[size - 15 + i][8] = (fBits >> i) & 1;
+            mat[size - 8][8] = 1;
+          }
+
+          function maskCond(mask, r, c) {
+            switch (mask) {
+              case 0: return (r + c) % 2 === 0;
+              case 1: return r % 2 === 0;
+              case 2: return c % 3 === 0;
+              case 3: return (r + c) % 3 === 0;
+              case 4: return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0;
+              case 5: return ((r * c) % 2) + ((r * c) % 3) === 0;
+              case 6: return (((r * c) % 2) + ((r * c) % 3)) % 2 === 0;
+              case 7: return (((r + c) % 2) + ((r * c) % 3)) % 2 === 0;
+            }
+            return false;
+          }
+
+          function penaltyScore(mat) {
+            let score = 0;
+            for (let r = 0; r < size; r++) {
+              let runColor = mat[r][0], runLen = 1;
+              for (let c = 1; c < size; c++) {
+                if (mat[r][c] === runColor) {
+                  runLen++;
+                } else {
+                  if (runLen >= 5) score += 3 + (runLen - 5);
+                  runColor = mat[r][c];
+                  runLen = 1;
+                }
+              }
+              if (runLen >= 5) score += 3 + (runLen - 5);
+            }
+            for (let c = 0; c < size; c++) {
+              let runColor = mat[0][c], runLen = 1;
+              for (let r = 1; r < size; r++) {
+                if (mat[r][c] === runColor) {
+                  runLen++;
+                } else {
+                  if (runLen >= 5) score += 3 + (runLen - 5);
+                  runColor = mat[r][c];
+                  runLen = 1;
+                }
+              }
+              if (runLen >= 5) score += 3 + (runLen - 5);
+            }
+            for (let r = 0; r < size - 1; r++) {
+              for (let c = 0; c < size - 1; c++) {
+                const v = mat[r][c];
+                if (v === mat[r][c + 1] && v === mat[r + 1][c] && v === mat[r + 1][c + 1]) score += 3;
+              }
+            }
+            let darkCount = 0;
+            for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) darkCount += mat[r][c];
+            const pct = (darkCount * 100) / (size * size);
+            score += Math.floor(Math.abs(pct - 50) / 5) * 10;
+            return score;
+          }
+
+          let bestScore = Infinity;
+          let bestMat = null;
+          for (let m = 0; m < 8; m++) {
+            const candidate = modules.map((row, r) =>
+              Uint8Array.from(row, (val, c) => (isFunc[r][c] ? val : maskCond(m, r, c) ? val ^ 1 : val))
+            );
+            applyFormat(candidate, m);
+            const s = penaltyScore(candidate);
+            if (s < bestScore) {
+              bestScore = s;
+              bestMat = candidate;
+            }
+          }
+
+          return { size, matrix: bestMat };
+        }
+
+        function renderQRSvg(url) {
+          const qr = generateQRMatrix(url);
+          if (!qr) {
+            qrSvgContainer.innerHTML =
+              '<span style="color:#64748b;font-size:0.85rem;text-align:center;">URL muito longa para o QR Code. Use um link mais curto.</span>';
+            return null;
+          }
+          const quiet = 2;
+          const total = qr.size + quiet * 2;
+          let paths = '';
+          for (let r = 0; r < qr.size; r++) {
+            for (let c = 0; c < qr.size; c++) {
+              if (qr.matrix[r][c]) {
+                paths += 'M' + (c + quiet) + ',' + (r + quiet) + 'h1v1h-1z';
+              }
+            }
+          }
+          qrSvgContainer.innerHTML =
+            '<svg viewBox="0 0 ' +
+            total +
+            ' ' +
+            total +
+            '" shape-rendering="crispEdges" role="img" aria-label="QR Code para abrir cartela">' +
+            '<rect width="' +
+            total +
+            '" height="' +
+            total +
+            '" fill="#ffffff"/>' +
+            '<path d="' +
+            paths +
+            '" fill="#0f172a"/></svg>';
+          return qr;
+        }
+
+        function getDefaultBaseUrl() {
+          if (window.location.protocol === 'file:') {
+            return window.location.href.split('?')[0].split('#')[0];
+          }
+          return window.location.origin + window.location.pathname;
+        }
+
+        function buildPlayerShareUrl(includeCard) {
+          let base = (qrBaseUrlInput.value || '').trim() || getDefaultBaseUrl();
+          try {
+            const u = new URL(base);
+            u.searchParams.set('modo', 'jogador');
+            u.searchParams.set('sala', state.roomCode);
+            if (includeCard) {
+              u.searchParams.set('c', encodeCardParam(state.player.card));
+            } else {
+              u.searchParams.delete('c');
+            }
+            return u.toString();
+          } catch (e) {
+            const cleanBase = base.split('?')[0].split('#')[0];
+            const sep = cleanBase.includes('?') ? '&' : '?';
+            let url = cleanBase + sep + 'modo=jogador&sala=' + encodeURIComponent(state.roomCode);
+            if (includeCard) url += '&c=' + encodeCardParam(state.player.card);
+            return url;
+          }
+        }
+
+        function updateQrModal() {
+          qrRoomLabel.textContent = state.roomCode;
+          const shareUrl = buildPlayerShareUrl(false);
+          qrShareUrlInput.value = shareUrl;
+          const isLocal =
+            window.location.protocol === 'file:' ||
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1';
+          const baseVal = (qrBaseUrlInput.value || '').trim();
+          const baseIsLocal =
+            baseVal.startsWith('file:') ||
+            baseVal.includes('localhost') ||
+            baseVal.includes('127.0.0.1');
+          qrLocalWarning.classList.toggle('hidden', !(isLocal && baseIsLocal));
+          renderQRSvg(shareUrl);
+        }
+
+        function copyTextToClipboard(text, successMsg) {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(
+              function () {
+                showToast(successMsg);
+              },
+              function () {
+                fallbackCopy(text, successMsg);
+              }
+            );
+          } else {
+            fallbackCopy(text, successMsg);
+          }
+        }
+
+        function fallbackCopy(text, successMsg) {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            document.execCommand('copy');
+            showToast(successMsg);
+          } catch (e) {
+            showToast('Não foi possível copiar automaticamente. Selecione e copie o link.');
+          }
+          document.body.removeChild(ta);
+        }
+
+        function showToast(msg) {
+          toastEl.textContent = msg;
+          toastEl.classList.remove('hidden');
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => {
+            toastEl.classList.add('hidden');
+          }, 3200);
+        }
+
+        /* ==================== SESSION TTL MONITOR ==================== */
+        function updateSessionCountdown() {
+          const now = Date.now();
+          const remainingMs = state.expiresAt - now;
+          if (remainingMs <= 0) {
+            const currentMode = state.mode;
+            localStorage.removeItem(STORAGE_KEY);
+            state = createFreshState(currentMode);
+            saveState(state);
+            renderAll();
+            showToast('Sessão de 30 minutos expirada. Nova sessão limpa iniciada.');
+            return;
+          }
+          const mins = Math.max(1, Math.ceil(remainingMs / 60000));
+          const baseText =
+            remainingMs < 60000
+              ? 'Sessão ativa • expira em < 1 min'
+              : 'Sessão ativa • expira em ' + mins + ' min';
+          const playerText = state.roomCode ? 'Sala ' + state.roomCode + ' · ' + baseText : baseText;
+          homeSessionIndicator.textContent = baseText;
+          sessionIndicators.forEach((el) => {
+            el.textContent = state.mode === 'player' ? playerText : baseText;
+          });
+        }
+
+        /* ==================== WINNING LINE DETECTION ==================== */
+        function evaluateCardWins(marked) {
+          const winningCells = new Set();
+          const patterns = [];
+
+          // Rows
+          for (let r = 0; r < 5; r++) {
+            if (marked[r].every(Boolean)) {
+              patterns.push('Linha ' + (r + 1));
+              for (let c = 0; c < 5; c++) winningCells.add(r + '-' + c);
+            }
+          }
+
+          // Columns
+          for (let c = 0; c < 5; c++) {
+            let full = true;
+            for (let r = 0; r < 5; r++) {
+              if (!marked[r][c]) {
+                full = false;
+                break;
+              }
+            }
+            if (full) {
+              patterns.push('Coluna ' + COLUMNS[c].letter);
+              for (let r = 0; r < 5; r++) winningCells.add(r + '-' + c);
+            }
+          }
+
+          // Main diagonal
+          if ([0, 1, 2, 3, 4].every((i) => marked[i][i])) {
+            patterns.push('Diagonal Principal');
+            for (let i = 0; i < 5; i++) winningCells.add(i + '-' + i);
+          }
+
+          // Anti-diagonal
+          if ([0, 1, 2, 3, 4].every((i) => marked[i][4 - i])) {
+            patterns.push('Diagonal Secundária');
+            for (let i = 0; i < 5; i++) winningCells.add(i + '-' + (4 - i));
+          }
+
+          return {
+            hasWin: patterns.length > 0,
+            patterns,
+            winningCells,
+            winKey: patterns.join('|'),
+          };
+        }
+
+        /* ==================== RENDERERS ==================== */
+        function renderScreen() {
+          screenHome.classList.toggle('hidden', state.mode !== 'home');
+          screenPresenter.classList.toggle('hidden', state.mode !== 'presenter');
+          screenPlayer.classList.toggle('hidden', state.mode !== 'player');
+        }
+
+        function renderMuteButtons() {
+          muteButtons.forEach((btn) => {
+            btn.textContent = state.muted ? 'Som: Mudo' : 'Som: Ligado';
+            btn.setAttribute('aria-pressed', String(state.muted));
+          });
+        }
+
+        function renderPresenter(animateNewBall) {
+          const drawn = state.presenter.drawn;
+          const drawnSet = new Set(drawn);
+          const count = drawn.length;
+          const remaining = 75 - count;
+
+          presenterCounter.textContent = count + ' / 75 sorteadas';
+          presenterRemaining.textContent = remaining + ' restantes';
+
+          if (isDrawing) {
+            spinningGlobeWrap.classList.remove('hidden');
+            currentBallOrb.classList.add('hidden');
+            btnDrawBall.disabled = true;
+            btnDrawBall.textContent = 'Girando globo...';
+          } else {
+            spinningGlobeWrap.classList.add('hidden');
+            currentBallOrb.classList.remove('hidden');
+            if (count === 0) {
+              currentBallOrb.className = 'drawn-ball-orb idle';
+              currentBallOrb.style.borderColor = '#94a3b8';
+              orbLetter.textContent = '—';
+              orbLetter.style.color = '#64748b';
+              orbNumber.textContent = '--';
+              orbCaption.textContent = 'Pronto para iniciar o sorteio';
+            } else {
+              const latest = drawn[count - 1];
+              const col = getColumnForNumber(latest);
+              currentBallOrb.className = animateNewBall ? 'drawn-ball-orb pop' : 'drawn-ball-orb';
+              if (animateNewBall) {
+                void currentBallOrb.offsetWidth;
+              }
+              currentBallOrb.style.borderColor = col.hex;
+              orbLetter.textContent = col.letter;
+              orbLetter.style.color = col.hex;
+              orbNumber.textContent = pad2(latest);
+              orbCaption.textContent = 'Coluna ' + col.letter + ' · Número ' + pad2(latest);
+            }
+
+            btnDrawBall.disabled = count >= 75;
+            btnDrawBall.textContent = count >= 75 ? 'Todas as 75 bolas sorteadas' : 'Sortear Número';
+          }
+
+          // Last 5 history
+          const last5 = drawn.slice(-5).reverse();
+          historyStrip.innerHTML = '';
+          for (let i = 0; i < 5; i++) {
+            const token = document.createElement('div');
+            if (i < last5.length) {
+              const num = last5[i];
+              const col = getColumnForNumber(num);
+              token.className = i === 0 ? 'history-token newest' : 'history-token';
+              token.innerHTML =
+                '<span class="history-token-letter ' +
+                col.textClass +
+                '">' +
+                col.letter +
+                '</span><span class="history-token-num tabular-nums">' +
+                pad2(num) +
+                '</span>';
+            } else {
+              token.className = 'history-token empty';
+              token.textContent = '—';
+            }
+            historyStrip.appendChild(token);
+          }
+
+          // Master Board (5 columns B-I-N-G-O)
+          const latestBall = count > 0 ? drawn[count - 1] : null;
+          masterBoard.innerHTML = '';
+          COLUMNS.forEach((col) => {
+            const colWrap = document.createElement('div');
+            colWrap.className = 'master-col';
+
+            const head = document.createElement('div');
+            head.className = 'master-col-head ' + col.colorClass;
+            head.innerHTML =
+              '<span>' +
+              col.letter +
+              '</span><span class="range-hint">' +
+              col.min +
+              '–' +
+              col.max +
+              '</span>';
+            colWrap.appendChild(head);
+
+            const cellsWrap = document.createElement('div');
+            cellsWrap.className = 'master-cells';
+
+            for (let n = col.min; n <= col.max; n++) {
+              const cell = document.createElement('div');
+              let cls = 'master-cell tabular-nums';
+              if (n === latestBall) {
+                cls += ' drawn latest';
+              } else if (drawnSet.has(n)) {
+                cls += ' drawn';
+              }
+              cell.className = cls;
+              cell.textContent = pad2(n);
+              cellsWrap.appendChild(cell);
+            }
+            colWrap.appendChild(cellsWrap);
+            masterBoard.appendChild(colWrap);
+          });
+        }
+
+        function renderPlayer() {
+          const { card, marked } = state.player;
+          const winInfo = evaluateCardWins(marked);
+
+          if (winInfo.hasWin) {
+            victoryBanner.classList.remove('hidden');
+            victoryPatternText.textContent =
+              'Vitória em: ' + winInfo.patterns.join(' · ') + ' — Confira os números ao lado.';
+            verifyHelpText.textContent =
+              'Cartela premiada! Leia os números marcados abaixo para conferência com o apresentador.';
+          } else {
+            victoryBanner.classList.add('hidden');
+            verifyHelpText.textContent =
+              'Toque nos números da cartela conforme forem sorteados. Ao completar uma linha, coluna ou diagonal, a vitória será detectada automaticamente.';
+          }
+
+          playerCardGrid.innerHTML = '';
+          const markedItems = [];
+
+          for (let r = 0; r < 5; r++) {
+            for (let c = 0; c < 5; c++) {
+              const val = card[r][c];
+              const isMarked = Boolean(marked[r][c]);
+              const isFree = r === 2 && c === 2;
+              const isWinningCell = winInfo.winningCells.has(r + '-' + c);
+
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              let cls = 'bingo-cell tabular-nums';
+              if (isFree) cls += ' is-free';
+              if (isMarked && !isFree) cls += ' marked';
+              if (isWinningCell) cls += ' winning-cell';
+              btn.className = cls;
+
+              if (isFree) {
+                btn.innerHTML =
+                  '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><span>FREE</span>';
+                btn.setAttribute('aria-label', 'Espaço central FREE sempre marcado');
+                btn.disabled = true;
+              } else {
+                btn.textContent = pad2(val);
+                btn.setAttribute(
+                  'aria-label',
+                  COLUMNS[c].letter + ' ' + val + (isMarked ? ', marcado' : ', não marcado')
+                );
+                btn.setAttribute('aria-pressed', String(isMarked));
+                btn.addEventListener('click', function () {
+                  toggleCell(r, c);
+                });
+              }
+
+              playerCardGrid.appendChild(btn);
+
+              if (isMarked) {
+                markedItems.push({
+                  colIndex: c,
+                  letter: COLUMNS[c].letter,
+                  textClass: COLUMNS[c].textClass,
+                  value: isFree ? 'FREE' : val,
+                  isWinningCell,
+                });
+              }
+            }
+          }
+
+          // Sort marked numbers by column B->I->N->G->O then numeric value
+          markedItems.sort((a, b) => {
+            if (a.colIndex !== b.colIndex) return a.colIndex - b.colIndex;
+            if (a.value === 'FREE') return -1;
+            if (b.value === 'FREE') return 1;
+            return a.value - b.value;
+          });
+
+          playerMarkedCount.textContent = markedItems.length + ' / 25';
+          markedChipsList.innerHTML = '';
+          markedItems.forEach((item) => {
+            const chip = document.createElement('span');
+            chip.className = item.isWinningCell ? 'marked-chip is-win tabular-nums' : 'marked-chip tabular-nums';
+            const label = item.value === 'FREE' ? 'FREE' : pad2(item.value);
+            chip.innerHTML =
+              '<span class="marked-chip-col ' +
+              item.textClass +
+              '">' +
+              item.letter +
+              '</span><span>-' +
+              label +
+              '</span>';
+            markedChipsList.appendChild(chip);
+          });
+        }
+
+        function renderAll(animateNewBall) {
+          renderScreen();
+          renderMuteButtons();
+          renderPresenter(Boolean(animateNewBall));
+          renderPlayer();
+          updateSessionCountdown();
+        }
+
+        /* ==================== ACTIONS ==================== */
+        function cancelActiveSpin() {
+          isDrawing = false;
+          if (drawSpinTimer) {
+            clearTimeout(drawSpinTimer);
+            drawSpinTimer = null;
+          }
+          if (drawTickInterval) {
+            clearInterval(drawTickInterval);
+            drawTickInterval = null;
+          }
+          if (drawCountdownInterval) {
+            clearInterval(drawCountdownInterval);
+            drawCountdownInterval = null;
+          }
+        }
+
+        function setMode(nextMode) {
+          cancelActiveSpin();
+          state.mode = nextMode;
+          saveState(state);
+          renderScreen();
+          if (nextMode === 'presenter') renderPresenter(false);
+          updateSessionCountdown();
+        }
+
+        function drawNextBall() {
+          if (isDrawing || state.presenter.drawn.length >= 75) return;
+          const drawnSet = new Set(state.presenter.drawn);
+          const available = [];
+          for (let i = 1; i <= 75; i++) {
+            if (!drawnSet.has(i)) available.push(i);
+          }
+          if (available.length === 0) return;
+
+          isDrawing = true;
+
+          // Restart CSS rotor animation cleanly
+          const rotor = spinningGlobeWrap.querySelector('.globe-cage-rotor');
+          if (rotor) {
+            rotor.style.animation = 'none';
+            void rotor.offsetWidth;
+            rotor.style.animation = '';
+          }
+
+          let secondsLeft = 3;
+          orbCaption.textContent = 'Girando globo... ' + secondsLeft + 's';
+          renderPresenter(false);
+
+          let tickStep = 0;
+          playGlobeTickSound(tickStep++);
+          drawTickInterval = setInterval(function () {
+            playGlobeTickSound(tickStep++);
+          }, 210);
+
+          drawCountdownInterval = setInterval(function () {
+            secondsLeft--;
+            if (secondsLeft > 0) {
+              orbCaption.textContent = 'Girando globo... ' + secondsLeft + 's';
+            }
+          }, 1000);
+
+          drawSpinTimer = setTimeout(function () {
+            cancelActiveSpin();
+            const picked = available[Math.floor(Math.random() * available.length)];
+            state.presenter.drawn.push(picked);
+            saveState(state);
+            playDrawSound();
+            renderPresenter(true);
+          }, 3000);
+        }
+
+        function toggleCell(r, c) {
+          if (r === 2 && c === 2) return;
+          const nextMark = !state.player.marked[r][c];
+          state.player.marked[r][c] = nextMark;
+
+          const winInfo = evaluateCardWins(state.player.marked);
+          if (winInfo.hasWin) {
+            if (state.player.celebratedWinKey !== winInfo.winKey) {
+              state.player.celebratedWinKey = winInfo.winKey;
+              playBingoFanfare();
+              launchConfetti();
+            } else {
+              playMarkSound(nextMark);
+            }
+          } else {
+            state.player.celebratedWinKey = null;
+            playMarkSound(nextMark);
+          }
+
+          saveState(state);
+          renderPlayer();
+        }
+
+        function openConfirmModal(title, desc, confirmLabel, onConfirm) {
+          modalTitle.textContent = title;
+          modalDesc.textContent = desc;
+          btnModalConfirm.textContent = confirmLabel;
+          pendingConfirmAction = onConfirm;
+          confirmModal.classList.remove('hidden');
+          btnModalCancel.focus();
+        }
+
+        function closeConfirmModal() {
+          confirmModal.classList.add('hidden');
+          pendingConfirmAction = null;
+        }
+
+        /* ==================== EVENT LISTENERS ==================== */
+        document.getElementById('btn-enter-presenter').addEventListener('click', function () {
+          setMode('presenter');
+        });
+
+        document.getElementById('btn-enter-player').addEventListener('click', function () {
+          setMode('player');
+        });
+
+        document.querySelectorAll('.js-back-home').forEach((btn) => {
+          btn.addEventListener('click', function () {
+            setMode('home');
+          });
+        });
+
+        muteButtons.forEach((btn) => {
+          btn.addEventListener('click', function () {
+            state.muted = !state.muted;
+            saveState(state);
+            renderMuteButtons();
+          });
+        });
+
+        btnDrawBall.addEventListener('click', drawNextBall);
+
+        document.getElementById('btn-replay-confetti').addEventListener('click', function () {
+          playBingoFanfare();
+          launchConfetti();
+        });
+
+        document.getElementById('btn-open-reset-modal').addEventListener('click', function () {
+          openConfirmModal(
+            'Reiniciar Jogo',
+            'Isso irá apagar todos os números sorteados, zerar o cache atual e iniciar um novo ciclo de 30 minutos.',
+            'Reiniciar Jogo',
+            function () {
+              cancelActiveSpin();
+              localStorage.removeItem(STORAGE_KEY);
+              state = createFreshState('presenter');
+              saveState(state);
+              renderAll(false);
+              showToast('Jogo reiniciado! Novo ciclo de 30 minutos iniciado.');
+            }
+          );
+        });
+
+        document.getElementById('btn-open-newcard-modal').addEventListener('click', function () {
+          openConfirmModal(
+            'Gerar Nova Cartela',
+            'Uma nova cartela aleatória 5x5 será criada e suas marcações atuais serão limpas (mantendo a sessão de 30 minutos).',
+            'Gerar Cartela',
+            function () {
+              state.player = createNewCard();
+              if (Date.now() >= state.expiresAt) {
+                state.expiresAt = Date.now() + SESSION_TTL_MS;
+              }
+              saveState(state);
+              renderPlayer();
+              updateSessionCountdown();
+              showToast('Nova cartela 5x5 gerada.');
+            }
+          );
+        });
+
+        document.getElementById('btn-open-qr-modal').addEventListener('click', function () {
+          if (!qrBaseUrlInput.value) {
+            qrBaseUrlInput.value = getDefaultBaseUrl();
+          }
+          updateQrModal();
+          qrModal.classList.remove('hidden');
+        });
+
+        document.getElementById('btn-close-qr-modal').addEventListener('click', function () {
+          qrModal.classList.add('hidden');
+        });
+
+        qrModal.addEventListener('click', function (e) {
+          if (e.target === qrModal) qrModal.classList.add('hidden');
+        });
+
+        qrBaseUrlInput.addEventListener('input', updateQrModal);
+
+        document.getElementById('btn-copy-share-url').addEventListener('click', function () {
+          copyTextToClipboard(qrShareUrlInput.value, 'Link das cartelas copiado!');
+        });
+
+        document.getElementById('btn-rotate-room').addEventListener('click', function () {
+          state.roomCode = generateRoomCode();
+          saveState(state);
+          updateQrModal();
+          updateSessionCountdown();
+          showToast('Novo código de sala gerado: ' + state.roomCode);
+        });
+
+        document.getElementById('btn-download-qr').addEventListener('click', function () {
+          const url = qrShareUrlInput.value;
+          const qr = generateQRMatrix(url);
+          if (!qr) return;
+          const quiet = 4;
+          const scale = 10;
+          const dim = (qr.size + quiet * 2) * scale;
+          const canvas = document.createElement('canvas');
+          canvas.width = dim;
+          canvas.height = dim;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, dim, dim);
+          ctx.fillStyle = '#0f172a';
+          for (let r = 0; r < qr.size; r++) {
+            for (let c = 0; c < qr.size; c++) {
+              if (qr.matrix[r][c]) {
+                ctx.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
+              }
+            }
+          }
+          const a = document.createElement('a');
+          a.href = canvas.toDataURL('image/png');
+          a.download = 'bingo75-' + state.roomCode.toLowerCase() + '-qrcode.png';
+          a.click();
+        });
+
+        document.getElementById('btn-copy-card-link').addEventListener('click', function () {
+          const cardUrl = buildPlayerShareUrl(true);
+          copyTextToClipboard(cardUrl, 'Link exclusivo desta cartela copiado!');
+        });
+
+        btnModalCancel.addEventListener('click', closeConfirmModal);
+        btnModalConfirm.addEventListener('click', function () {
+          const action = pendingConfirmAction;
+          closeConfirmModal();
+          if (typeof action === 'function') action();
+        });
+
+        confirmModal.addEventListener('click', function (e) {
+          if (e.target === confirmModal) closeConfirmModal();
+        });
+
+        document.addEventListener('keydown', function (e) {
+          if (!qrModal.classList.contains('hidden')) {
+            if (e.key === 'Escape') qrModal.classList.add('hidden');
+            return;
+          }
+
+          if (!confirmModal.classList.contains('hidden')) {
+            if (e.key === 'Escape') closeConfirmModal();
+            return;
+          }
+
+          if (e.key === 'm' || e.key === 'M') {
+            if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+            state.muted = !state.muted;
+            saveState(state);
+            renderMuteButtons();
+            return;
+          }
+
+          if (state.mode === 'presenter' && (e.code === 'Space' || e.key === ' ')) {
+            const activeTag = document.activeElement ? document.activeElement.tagName : '';
+            if (activeTag !== 'BUTTON' || document.activeElement === btnDrawBall) {
+              e.preventDefault();
+              drawNextBall();
+            }
+          }
+        });
+
+        /* ==================== BOOT ==================== */
+        renderAll(false);
+        setInterval(updateSessionCountdown, 1000);
+      })();
+    </script>
+  </body>
+</html>
+
