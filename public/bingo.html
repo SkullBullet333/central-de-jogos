@@ -1343,12 +1343,33 @@
       .projection .orb-letter{font-size:clamp(2rem,6vh,5rem)}
       .projection .history-token-num{font-size:clamp(1.35rem,4vh,3rem)} .projection .history-token-letter{font-size:1rem}
       #projection[aria-pressed=true]{background:#245340;color:white}
+      html.online-mode .app-shell,html.online-mode body>nav{display:none}
+      #online{width:min(100% - 2rem,60rem);margin:2rem auto;color:#18382e;background:#fcfaf4;border-radius:1.5rem;padding:clamp(1rem,3vw,2.5rem)}
+      #online [hidden],#online[hidden]{display:none!important}#online h1{font-size:clamp(2rem,5vw,3rem);margin:.5rem 0}#online h2{font-size:1.15rem}
+      #online button,#online select,#online input{font:inherit;border:1px solid #9bb7a6;border-radius:.6rem;padding:.65rem;margin:.3rem .2rem .3rem 0}
+      #online button{cursor:pointer;background:#19563d;color:white}#online button:disabled{opacity:.5}#room-ball{font-size:clamp(3rem,10vw,7rem);line-height:1.1;font-weight:800}
+      #room-qr svg{width:min(12rem,100%)}#room-link{overflow-wrap:anywhere}
+      #room-card{display:grid;grid-template-columns:repeat(5,1fr);gap:.35rem;max-width:30rem;text-align:center}
+      #room-card span{padding:.6rem .2rem;border:1px solid #a9b8ae;border-radius:.4rem}#room-card .hit{background:#19563d;color:white;font-weight:bold}
     </style>
-  </head>
+  <script>if(new URLSearchParams(location.search).has('convite')||new URLSearchParams(location.search).has('apresentar'))document.documentElement.classList.add('online-mode');</script></head>
   <body><nav style="padding:10px 4vw;background:#211932"><a href="/" style="color:white;font:700 16px system-ui">‹ Central de Jogos</a></nav>
     <canvas id="confetti-canvas" aria-hidden="true"></canvas>
 
-    <div class="app-shell">
+    <main hidden id="online">
+      <h1 id="room-title">Bingo em sala</h1><p role="status" id="room-status"></p>
+      <section hidden id="room-setup"><p>Crie a sala e distribua o convite antes da primeira pedra.</p>
+        <label>Passagem para cartela cheia <select id="setup-rule"><option value="manual">Manual</option><option value="auto">Após a primeira quina</option></select></label>
+        <button id="room-create">Criar sala</button></section>
+      <section hidden id="room-join"><form id="room-form"><label>Seu nome <input required maxlength="60" autocomplete="given-name" id="room-name"></label><button>Receber minha cartela</button></form></section>
+      <section hidden id="room-game"><strong id="room-phase"></strong><p id="room-count"></p><div aria-label="Última pedra" id="room-ball"></div><p id="room-history"></p><p role="status" id="room-awards"></p>
+        <section hidden id="room-controls"><button id="room-draw">Sortear pedra</button><button id="room-advance">Passar para cheia</button>
+          <label id="room-rule-label">Troca de fase <select id="room-rule"><option value="manual">Manual</option><option value="auto">Após a primeira quina</option></select></label>
+          <h2>Falta uma pedra</h2><p id="room-near"></p><details open><summary>Convite e participantes</summary>
+          <p>Compartilhe este convite antes do primeiro sorteio.</p><div id="room-qr"></div><a id="room-link"></a> <button id="room-copy">Copiar convite</button><p id="room-names"></p></details>
+          <button id="room-new">Criar outra sala</button> <a href="/">Central de Jogos</a></section>
+        <section hidden id="room-player"><h2>Minha cartela</h2><p>As pedras sorteadas são marcadas automaticamente.</p><div id="room-card"></div></section>
+      </section></main><div class="app-shell">
       <!-- ==================== HOME / TITLE SCREEN ==================== -->
       <main id="screen-home" class="home-screen">
         <div class="home-topbar">
@@ -1386,7 +1407,7 @@
             </p>
 
             <div id="resume-panel" class="hidden"><button id="resume" class="btn btn-primary">Continuar partida</button> <button id="fresh" class="btn btn-ghost">Nova partida</button></div>
-            <div class="mode-grid">
+            <a id="live-entry" class="btn btn-primary" href="?apresentar=1">Apresentar bingo com participantes</a><div class="mode-grid">
               <button type="button" id="btn-enter-presenter" class="mode-card">
                 <span class="mode-card-icon presenter" aria-hidden="true">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -2455,14 +2476,14 @@
           return { size, matrix: bestMat };
         }
 
-        function renderQRSvg(url) {
+        function renderQRSvg(url, container = qrSvgContainer) {
           const qr = generateQRMatrix(url);
           if (!qr) {
-            qrSvgContainer.innerHTML =
+            container.innerHTML =
               '<span style="color:#64748b;font-size:0.85rem;text-align:center;">URL muito longa para o QR Code. Use um link mais curto.</span>';
             return null;
           }
-          const quiet = 2;
+          const quiet = 4;
           const total = qr.size + quiet * 2;
           let paths = '';
           for (let r = 0; r < qr.size; r++) {
@@ -2472,7 +2493,7 @@
               }
             }
           }
-          qrSvgContainer.innerHTML =
+          container.innerHTML =
             '<svg viewBox="0 0 ' +
             total +
             ' ' +
@@ -3109,7 +3130,7 @@
         });
 
         document.addEventListener('keydown', function (e) {
-          if (checker.open) return;
+          if (checker.open || document.documentElement.classList.contains('online-mode')) return;
           if (!qrModal.classList.contains('hidden')) {
             if (e.key === 'Escape') qrModal.classList.add('hidden');
             return;
@@ -3138,7 +3159,15 @@
         });
 
         /* ==================== BOOT ==================== */
-        renderAll(false);
+        if(document.documentElement.classList.contains('online-mode')){
+          import('/bingo-online.js').then(module=>module.openRoom(renderQRSvg)).catch(()=>{
+            document.getElementById('online').hidden=false;
+            document.getElementById('room-status').textContent='Falha ao abrir a sala. Recarregue a página.';
+          });
+        }else{
+          if(location.protocol==='file:')document.getElementById('live-entry').hidden=true;
+          renderAll(false);
+        }
       })();
     </script>
   </body>

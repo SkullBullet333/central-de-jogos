@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import { test } from 'node:test';
 
 const html = readFileSync(new URL('../public/bingo.html', import.meta.url),'utf8');
-const source = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const source = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].at(-1)[1];
 new vm.Script(source);
 
 // O HTML é autocontido. Executa as rotinas da página sem montar a interface.
