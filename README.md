@@ -2,7 +2,7 @@
 
 ## Teste local do bingo em sala
 
-Use Node.js 22 ou superior. Execute `npm ci` no primeiro uso, depois `npm run dev`. Abra `http://localhost:3000/bingo.html`, escolha **Apresentar bingo com participantes** e crie uma sala. Sem credenciais Redis, o servidor de desenvolvimento mantém as salas em memória até reiniciar.
+Use Node.js 22 ou superior. Execute `npm ci` no primeiro uso, depois `npm run dev`. Abra `http://localhost:3000/bingo.html`, escolha **Modo Apresentador** e crie uma sala. Sem credenciais Redis, o servidor de desenvolvimento mantém as salas em memória até reiniciar.
 
 Para simular dois participantes, abra o convite em dois perfis diferentes de navegador. O mesmo perfil recupera a cartela já atribuída. Para testar no celular, execute `npm run dev -- --hostname 0.0.0.0` e abra a página principal pelo IP do computador na mesma rede antes de gerar o QR. Um convite com localhost só funciona no próprio computador.
 

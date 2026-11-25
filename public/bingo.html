@@ -1343,33 +1343,19 @@
       .projection .orb-letter{font-size:clamp(2rem,6vh,5rem)}
       .projection .history-token-num{font-size:clamp(1.35rem,4vh,3rem)} .projection .history-token-letter{font-size:1rem}
       #projection[aria-pressed=true]{background:#245340;color:white}
-      html.online-mode .app-shell,html.online-mode body>nav{display:none}
-      #online{width:min(100% - 2rem,60rem);margin:2rem auto;color:#18382e;background:#fcfaf4;border-radius:1.5rem;padding:clamp(1rem,3vw,2.5rem)}
-      #online [hidden],#online[hidden]{display:none!important}#online h1{font-size:clamp(2rem,5vw,3rem);margin:.5rem 0}#online h2{font-size:1.15rem}
-      #online button,#online select,#online input{font:inherit;border:1px solid #9bb7a6;border-radius:.6rem;padding:.65rem;margin:.3rem .2rem .3rem 0}
-      #online button{cursor:pointer;background:#19563d;color:white}#online button:disabled{opacity:.5}#room-ball{font-size:clamp(3rem,10vw,7rem);line-height:1.1;font-weight:800}
-      #room-qr svg{width:min(12rem,100%)}#room-link{overflow-wrap:anywhere}
-      #room-card{display:grid;grid-template-columns:repeat(5,1fr);gap:.35rem;max-width:30rem;text-align:center}
-      #room-card span{padding:.6rem .2rem;border:1px solid #a9b8ae;border-radius:.4rem}#room-card .hit{background:#19563d;color:white;font-weight:bold}
+      [hidden]{display:none!important}
+      .room-panel{margin:1rem 0;padding:1rem;display:grid;gap:.6rem}
+      .room-panel input,.room-panel select{font:inherit;padding:.5rem;border:1px solid #adbcb1;border-radius:.5rem;max-width:100%}
+      .room-panel button{justify-self:start}.room-panel p{margin:.25rem 0}
+      .online-mode #screen-home,.online-mode .js-session-indicator,.online-mode #resume-panel{display:none!important}
+      .online-mode #btn-rotate-room,.online-mode #btn-open-newcard-modal,.online-mode #btn-copy-card-link{display:none!important}
+      .online-guest #screen-presenter,.online-guest .js-back-home,.online-guest body>nav,.online-guest:not(.has-room) .player-layout{display:none!important}
     </style>
-  <script>if(new URLSearchParams(location.search).has('convite')||new URLSearchParams(location.search).has('apresentar'))document.documentElement.classList.add('online-mode');</script></head>
+  <script>if(new URLSearchParams(location.search).has('convite')||new URLSearchParams(location.search).has('apresentar'))document.documentElement.classList.add('online-mode');if(new URLSearchParams(location.search).has('convite'))document.documentElement.classList.add('online-guest');</script></head>
   <body><nav style="padding:10px 4vw;background:#211932"><a href="/" style="color:white;font:700 16px system-ui">‹ Central de Jogos</a></nav>
     <canvas id="confetti-canvas" aria-hidden="true"></canvas>
 
-    <main hidden id="online">
-      <h1 id="room-title">Bingo em sala</h1><p role="status" id="room-status"></p>
-      <section hidden id="room-setup"><p>Crie a sala e distribua o convite antes da primeira pedra.</p>
-        <label>Passagem para cartela cheia <select id="setup-rule"><option value="manual">Manual</option><option value="auto">Após a primeira quina</option></select></label>
-        <button id="room-create">Criar sala</button></section>
-      <section hidden id="room-join"><form id="room-form"><label>Seu nome <input required maxlength="60" autocomplete="given-name" id="room-name"></label><button>Receber minha cartela</button></form></section>
-      <section hidden id="room-game"><strong id="room-phase"></strong><p id="room-count"></p><div aria-label="Última pedra" id="room-ball"></div><p id="room-history"></p><p role="status" id="room-awards"></p>
-        <section hidden id="room-controls"><button id="room-draw">Sortear pedra</button><button id="room-advance">Passar para cheia</button>
-          <label id="room-rule-label">Troca de fase <select id="room-rule"><option value="manual">Manual</option><option value="auto">Após a primeira quina</option></select></label>
-          <h2>Falta uma pedra</h2><p id="room-near"></p><details open><summary>Convite e participantes</summary>
-          <p>Compartilhe este convite antes do primeiro sorteio.</p><div id="room-qr"></div><a id="room-link"></a> <button id="room-copy">Copiar convite</button><p id="room-names"></p></details>
-          <button id="room-new">Criar outra sala</button> <a href="/">Central de Jogos</a></section>
-        <section hidden id="room-player"><h2>Minha cartela</h2><p>As pedras sorteadas são marcadas automaticamente.</p><div id="room-card"></div></section>
-      </section></main><div class="app-shell">
+    <div class="app-shell">
       <!-- ==================== HOME / TITLE SCREEN ==================== -->
       <main id="screen-home" class="home-screen">
         <div class="home-topbar">
@@ -1407,7 +1393,7 @@
             </p>
 
             <div id="resume-panel" class="hidden"><button id="resume" class="btn btn-primary">Continuar partida</button> <button id="fresh" class="btn btn-ghost">Nova partida</button></div>
-            <a id="live-entry" class="btn btn-primary" href="?apresentar=1">Apresentar bingo com participantes</a><div class="mode-grid">
+            <div class="mode-grid">
               <button type="button" id="btn-enter-presenter" class="mode-card">
                 <span class="mode-card-icon presenter" aria-hidden="true">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1523,6 +1509,14 @@
           </div>
         </header>
 
+        <section id="host-room-panel" class="surface-panel room-panel" hidden>
+            <div id="room-setup" hidden><button class="btn btn-primary" id="room-create">Criar sala</button> <a href="?local=1">Jogar sem sala</a></div>
+            <div id="room-game" hidden><strong id="room-phase"></strong> · <span id="room-count"></span>
+              <p><b>Falta uma pedra:</b> <span id="room-near"></span></p>
+              <details><summary>Participantes e regras</summary><p id="room-names"></p>
+              <label id="room-rule-label">Troca para cheia <select id="room-rule"><option value="manual">Manual</option><option value="auto">Após a primeira quina</option></select></label>
+              <button class="btn btn-ghost" id="room-advance">Passar para cheia</button></details><p id="room-awards"></p></div>
+            <span id="host-status" role="status"></span></section>
         <div class="presenter-layout">
           <!-- Left: Globe & Controls -->
           <div class="surface-panel presenter-stage">
@@ -1619,6 +1613,10 @@
           </div>
         </header>
 
+        <section id="player-room-panel" class="surface-panel room-panel" hidden>
+          <form id="invite-form" hidden><label>Convite do apresentador <input id="invite-url" required placeholder="Cole o link da sala"></label> <button class="btn btn-primary">Entrar na sala</button></form>
+          <form id="room-form" hidden><label>Seu nome <input required maxlength="60" autocomplete="given-name" id="room-name"></label> <button class="btn btn-primary">Receber minha cartela</button></form>
+          <strong id="player-summary"></strong><span id="player-status" role="status"></span></section>
         <div class="player-layout">
           <!-- Interactive 5x5 Bingo Card -->
           <div class="card-wrapper">
@@ -2107,7 +2105,11 @@
         }
 
         /* ==================== STATE & DOM REFS ==================== */
-        let state = loadState();
+        const online = document.documentElement.classList.contains('online-mode');
+        const guest = document.documentElement.classList.contains('online-guest');
+        const el = id => document.getElementById(id);
+        let roomClient, roomData;
+        let state = online ? createFreshState(guest?'player':'presenter') : loadState();
         let pendingConfirmAction = null;
         let toastTimer = null;
         let isDrawing = false;
@@ -2518,6 +2520,11 @@
         }
 
         function buildPlayerShareUrl(includeCard) {
+          if (online && roomData) {
+            const link = new URL(getDefaultBaseUrl());
+            link.searchParams.set('convite',roomData.id);
+            return link.href;
+          }
           let base = (qrBaseUrlInput.value || '').trim() || getDefaultBaseUrl();
           try {
             const u = new URL(base);
@@ -2901,7 +2908,7 @@
         }
 
         function drawNextBall() {
-          if (isDrawing || state.presenter.drawn.length >= 75) return;
+          if (isDrawing || state.presenter.drawn.length >= 75 || (online && (!roomData?.count || roomData.phase==='encerrada' || guest || roomClient?.busy))) return;
 
 
           isDrawing = true;
@@ -2933,6 +2940,7 @@
 
           drawSpinTimer = setTimeout(function () {
             cancelActiveSpin();
+            if (online) { roomClient.run('draw'); return; }
             const picked = pickBall(state.presenter.drawn);
             state.presenter.drawn.push(picked);
             saveState(state);
@@ -2942,7 +2950,7 @@
         }
 
         function toggleCell(r, c) {
-          if (r === 2 && c === 2) return;
+          if (online || (r === 2 && c === 2)) return;
           const nextMark = !state.player.marked[r][c];
           state.player.marked[r][c] = nextMark;
 
@@ -2998,7 +3006,8 @@
           document.getElementById('verdict').textContent=verifyClaim(document.getElementById('claim').value,state.presenter.drawn);
         };
         document.getElementById('btn-enter-presenter').addEventListener('click', function () {
-          setMode('presenter');
+          if(location.protocol!=='file:' && !location.search.includes('local=1')) location.search='?apresentar=1';
+          else setMode('presenter');
         });
 
         document.getElementById('btn-enter-player').addEventListener('click', function () {
@@ -3007,6 +3016,7 @@
 
         document.querySelectorAll('.js-back-home').forEach((btn) => {
           btn.addEventListener('click', function () {
+            if(online){location.href=location.pathname;return;}
             setMode('home');
           });
         });
@@ -3014,7 +3024,7 @@
         muteButtons.forEach((btn) => {
           btn.addEventListener('click', function () {
             state.muted = !state.muted;
-            saveState(state);
+            if(!online)saveState(state);
             renderMuteButtons();
           });
         });
@@ -3027,6 +3037,11 @@
         });
 
         document.getElementById('btn-open-reset-modal').addEventListener('click', function () {
+          if(online){
+            if(isDrawing || roomClient?.busy)return;
+            if(roomData)openConfirmModal('Nova sala','Criar outro convite e iniciar um novo sorteio?', 'Criar sala',()=>roomClient.run('create',{automatic:roomData.automatic}));
+            return;
+          }
           openConfirmModal(
             'Reiniciar Jogo',
             'Isso irá apagar todos os números sorteados, apagar as marcações da cartela e iniciar outra partida.',
@@ -3130,7 +3145,7 @@
         });
 
         document.addEventListener('keydown', function (e) {
-          if (checker.open || document.documentElement.classList.contains('online-mode')) return;
+          if (checker.open || ['INPUT','SELECT'].includes(document.activeElement?.tagName)) return;
           if (!qrModal.classList.contains('hidden')) {
             if (e.key === 'Escape') qrModal.classList.add('hidden');
             return;
@@ -3144,7 +3159,7 @@
           if (e.key === 'm' || e.key === 'M') {
             if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
             state.muted = !state.muted;
-            saveState(state);
+            if(!online)saveState(state);
             renderMuteButtons();
             return;
           }
@@ -3159,14 +3174,68 @@
         });
 
         /* ==================== BOOT ==================== */
-        if(document.documentElement.classList.contains('online-mode')){
-          import('/bingo-online.js').then(module=>module.openRoom(renderQRSvg)).catch(()=>{
-            document.getElementById('online').hidden=false;
-            document.getElementById('room-status').textContent='Falha ao abrir a sala. Recarregue a página.';
-          });
+        if(online){
+          renderScreen();renderMuteButtons();
+          el(guest?'player-room-panel':'host-room-panel').hidden=false;
+          if(!guest){
+            renderPresenter(false);
+            for(const id of ['btn-draw-ball','btn-open-qr-modal','btn-open-reset-modal'])el(id).disabled=true;
+            qrBaseUrlInput.parentElement.hidden=true;
+          }
+          const status=el(guest?'player-status':'host-status');
+          const phaseTitle={quina:'Quina',cheia:'Cartela cheia',encerrada:'Partida encerrada'};
+          function applyRoom(data){
+            const previous=roomData;
+            roomData=data;
+            document.documentElement.classList.add('has-room');
+            state.presenter.drawn=data.drawn;
+            const newBall=previous?.id===data.id && previous.drawn.length<data.drawn.length;
+            if(newBall)playDrawSound();
+            if(!guest){
+              state.roomCode=data.id;
+              renderPresenter(newBall);
+              btnDrawBall.disabled=isDrawing || !data.count || data.phase==='encerrada' || data.drawn.length===75;
+              el('btn-open-qr-modal').disabled=false;el('btn-open-reset-modal').disabled=false;
+              el('room-phase').textContent=phaseTitle[data.phase];
+              el('room-count').textContent=data.count+' participante(s)';
+              el('room-near').textContent=data.near.join(', ')||'Ninguém por enquanto.';
+              el('room-names').textContent=data.names.join(', ')||'Aguardando participantes.';
+              el('room-rule').value=data.automatic?'auto':'manual';
+              el('room-rule-label').hidden=el('room-advance').hidden=data.phase!=='quina';
+              el('room-awards').textContent=[data.quinas.length?'Quina: '+data.quinas.join(', '):'',data.winners.length?'Cheia: '+data.winners.join(', '):''].filter(Boolean).join(' · ');
+            }else{
+              el('player-summary').textContent=data.name+' · '+phaseTitle[data.phase];
+              if(previous && previous.turn===data.turn)return;
+              state.player.card=data.card.map(row=>row.map(n=>n||'FREE'));
+              state.player.marked=data.card.map(row=>row.map(n=>!n || data.drawn.includes(n)));
+              renderPlayer();
+              const won=data.phase==='quina'?evaluateCardWins(state.player.marked).hasWin:state.player.marked.flat().every(Boolean);
+              victoryBanner.classList.toggle('hidden',!won);
+              if(won)victoryPatternText.textContent=data.phase==='quina'?'Quina na sua cartela!':'Você completou a cartela!';
+              const award = won ? (data.phase==='quina'?'quina':'cheia') : null;
+              if(award && award!==state.player.celebratedWinKey && newBall){playBingoFanfare();launchConfetti();}
+              state.player.celebratedWinKey=award;
+              verifyHelpText.textContent='Sua cartela é marcada automaticamente a cada pedra sorteada.';
+            }
+          }
+          import('/bingo-online.js').then(m=>{
+            roomClient=m.openRoom({guest,applyRoom,say:text=>status.textContent=text});
+          }).catch(()=>status.textContent='Falha ao abrir a sala. Recarregue a página.');
         }else{
-          if(location.protocol==='file:')document.getElementById('live-entry').hidden=true;
           renderAll(false);
+          if(location.search==='?local=1')setMode('presenter');
+          if(location.protocol!=='file:'){
+            el('player-room-panel').hidden=false;el('invite-form').hidden=false;
+            el('invite-form').onsubmit=e=>{
+              e.preventDefault();
+              try{
+                const url=new URL(el('invite-url').value.trim());
+                const invite=url.searchParams.get('convite');
+                if(!invite || url.origin!==location.origin)throw Error();
+                location.search='?convite='+encodeURIComponent(invite);
+              }catch{el('player-status').textContent='Cole o convite desta Central fornecido pelo apresentador.';}
+            };
+          }
         }
       })();
     </script>
